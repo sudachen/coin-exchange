@@ -9,32 +9,32 @@ import (
 )
 
 type Kline struct {
-	StartTime 		int64	`json:"t"`
-	EndTime 		int64	`json:"T"`
-	Symbol			string	`json:"s"`
-	Interval 		string  `json:"i"`
-	FirstTradeId  	int64	`json:"f"`
-	LastTradeId  	int64	`json:"L"`
-	Open 			string  `json:"o"`
-	Close 			string  `json:"c"`
-	High    		string  `json:"h"`
-	Low    			string  `json:"l"`
-	Volume    		string  `json:"v"`
-	TradeNum        int32   `json:"n"`
-	IsFinal 		bool	`json:"x"`
-	QuteVolume		string	`json:"q"`
-	ActiveBuyVolume string 	`json:"V"`
+	StartTime       int64  `json:"t"`
+	EndTime         int64  `json:"T"`
+	Symbol          string `json:"s"`
+	Interval        string `json:"i"`
+	FirstTradeId    int64  `json:"f"`
+	LastTradeId     int64  `json:"L"`
+	Open            string `json:"o"`
+	Close           string `json:"c"`
+	High            string `json:"h"`
+	Low             string `json:"l"`
+	Volume          string `json:"v"`
+	TradeNum        int32  `json:"n"`
+	IsFinal         bool   `json:"x"`
+	QuteVolume      string `json:"q"`
+	ActiveBuyVolume string `json:"V"`
 
 	ActiveBuyQuoteVolume string `json:"Q"`
 
-	IgnoreMe 		string 	`json:"B"`
+	IgnoreMe string `json:"B"`
 }
 
 type Candlelstick struct {
-	EventType 		string 	`json:"e"`
-	EventTime		int64	`json:"E"`
-	Symbol 			string  `json:"s"`
-	Kline			Kline   `json:"k"`
+	EventType string `json:"e"`
+	EventTime int64  `json:"E"`
+	Symbol    string `json:"s"`
+	Kline     Kline  `json:"k"`
 }
 
 func CandlelstickDecode(sid exchange.StreamId, m []byte) (*message.Candlestick, error) {
@@ -44,12 +44,12 @@ func CandlelstickDecode(sid exchange.StreamId, m []byte) (*message.Candlestick, 
 	}
 
 	mesg := &message.Candlestick{
-		Origin: sid,
-		StartTime: time.Unix(e.Kline.StartTime,0),
-		EndTime: time.Unix(e.Kline.EndTime,0),
+		Origin:       sid,
+		StartTime:    time.Unix(e.Kline.StartTime, 0),
+		EndTime:      time.Unix(e.Kline.EndTime, 0),
 		FirstTradeId: e.Kline.FirstTradeId,
-		LastTradeId: e.Kline.LastTradeId,
-		TradeNum: e.Kline.TradeNum,
+		LastTradeId:  e.Kline.LastTradeId,
+		TradeNum:     e.Kline.TradeNum,
 	}
 
 	cv := func(s string) float32 {
@@ -57,7 +57,8 @@ func CandlelstickDecode(sid exchange.StreamId, m []byte) (*message.Candlestick, 
 			return 0
 		} else {
 			return float32(f)
-		}}
+		}
+	}
 
 	mesg.Open = cv(e.Kline.Open)
 	mesg.Close = cv(e.Kline.Close)
@@ -67,5 +68,5 @@ func CandlelstickDecode(sid exchange.StreamId, m []byte) (*message.Candlestick, 
 
 	mesg.Interval = 1 //min
 
-	return mesg, nil;
+	return mesg, nil
 }

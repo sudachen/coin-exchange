@@ -6,14 +6,13 @@ import (
 )
 
 type Trade struct {
-
 	Origin exchange.StreamId
 
 	TradeId int64
-	Price 	float32
-	Qty		float32
+	Price   float32
+	Qty     float32
 
-	BuyerOrderId	int64
-	SellerOrderId	int64
-	TradeOrderTime 	time.Time
+	BuyerOrderId   int64
+	SellerOrderId  int64
+	TradeOrderTime time.Time
 }

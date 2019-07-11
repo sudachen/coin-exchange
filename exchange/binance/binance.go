@@ -21,7 +21,7 @@ func makeSymbol(pair exchange.CoinPair) string {
 			ccs[i] = cc.String()
 		}
 	}
-	return strings.ToLower(ccs[0]+ccs[1])
+	return strings.ToLower(ccs[0] + ccs[1])
 }
 
 func Websocket(pair exchange.CoinPair, channel exchange.Channel) *exchange.Websocket {
@@ -35,9 +35,9 @@ func Websocket(pair exchange.CoinPair, channel exchange.Channel) *exchange.Webso
 		panic("unreachable")
 	}
 	return exchange.NewWebsocket(
-			exchange.StreamId{pair, channel, exchange.Binance },
-			endpoint,
-			msgConv)
+		exchange.StreamId{pair, channel, exchange.Binance},
+		endpoint,
+		msgConv)
 }
 
 func msgConv(sid exchange.StreamId, m []byte) (interface{}, error) {
@@ -57,4 +57,3 @@ func msgConv(sid exchange.StreamId, m []byte) (interface{}, error) {
 	}
 	return nil, nil
 }
-

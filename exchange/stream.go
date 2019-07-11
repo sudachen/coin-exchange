@@ -11,8 +11,8 @@ const MsgQueueLength = 61
 const ErrQueueLength = 13
 
 type StreamId struct {
-	Pair CoinPair
-	Channel Channel
+	Pair     CoinPair
+	Channel  Channel
 	Exchange Exchange
 }
 
@@ -23,14 +23,14 @@ var Collector = &StreamMachine{
 
 type StreamMachine struct {
 	MsgStream chan interface{}
-	ec chan WebsocketError
-	streams map[StreamId]*Websocket
+	ec        chan WebsocketError
+	streams   map[StreamId]*Websocket
 }
 
 func (m *StreamMachine) Subscribe(ws *Websocket) error {
-	return ws.Connect(m.MsgStream,m.ec)
+	return ws.Connect(m.MsgStream, m.ec)
 }
 
 func (m *StreamMachine) Next() interface{} {
-	return <- m.MsgStream
+	return <-m.MsgStream
 }

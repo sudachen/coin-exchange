@@ -8,7 +8,7 @@ import (
 const wsTimeout = time.Second * 60
 const wsKeepalive = false
 
-type MsgConv = func(StreamId,[]byte) (interface{}, error)
+type MsgConv = func(StreamId, []byte) (interface{}, error)
 
 type Websocket struct {
 	Sid      StreamId
@@ -18,7 +18,7 @@ type Websocket struct {
 }
 
 func NewWebsocket(sid StreamId, endpoint string, msgConv MsgConv) *Websocket {
-	return &Websocket {
+	return &Websocket{
 		sid,
 		endpoint,
 		msgConv,
@@ -40,11 +40,11 @@ type WebsocketError struct {
 
 func (p *Websocket) worker(mc chan interface{}, ec chan WebsocketError) {
 	p.cClose = make(chan struct{})
-	defer func (){ close(p.cClose); p.cClose = nil }()
+	defer func() { close(p.cClose); p.cClose = nil }()
 
 	c, _, err := websocket.DefaultDialer.Dial(p.endpoint, nil)
 	if err != nil {
-		ec <- WebsocketError{ p.Sid, err }
+		ec <- WebsocketError{p.Sid, err}
 		return
 	}
 
@@ -54,17 +54,17 @@ func (p *Websocket) worker(mc chan interface{}, ec chan WebsocketError) {
 
 	for {
 		select {
-		case <- p.cClose:
+		case <-p.cClose:
 			return
 		default:
 			_, message, err := c.ReadMessage()
 			if err != nil {
-				ec <- WebsocketError{ p.Sid, err }
+				ec <- WebsocketError{p.Sid, err}
 				return
 			}
 			m, err := p.msgConv(p.Sid, message)
 			if err != nil {
-				ec <- WebsocketError{ p.Sid, err }
+				ec <- WebsocketError{p.Sid, err}
 				return
 			}
 			if m != nil {
@@ -77,7 +77,8 @@ func (p *Websocket) worker(mc chan interface{}, ec chan WebsocketError) {
 func (p *Websocket) keepAlive(c *websocket.Conn, timeout time.Duration, ec chan WebsocketError) {
 
 	switch p.Sid.Channel {
-	case Candlestick, Trade: return // are updated quite often
+	case Candlestick, Trade:
+		return // are updated quite often
 	}
 
 	ticker := time.NewTicker(timeout)
@@ -94,7 +95,7 @@ func (p *Websocket) keepAlive(c *websocket.Conn, timeout time.Duration, ec chan 
 			deadline := time.Now().Add(10 * time.Second)
 			err := c.WriteControl(websocket.PingMessage, []byte{}, deadline)
 			if err != nil {
-				ec <- WebsocketError{ p.Sid, err }
+				ec <- WebsocketError{p.Sid, err}
 				return
 			}
 			<-ticker.C
@@ -111,6 +112,6 @@ func (p *Websocket) Subscribe() error {
 }
 
 func (p *Websocket) Connect(mc chan interface{}, ec chan WebsocketError) error {
-	go p.worker(mc,ec)
+	go p.worker(mc, ec)
 	return nil
 }
