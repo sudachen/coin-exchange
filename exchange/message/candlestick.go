@@ -6,7 +6,8 @@ import (
 )
 
 type Candlestick struct {
-	Origin exchange.StreamId
+	Origin exchange.Exchange
+	Pair   exchange.CoinPair
 
 	StartTime time.Time
 	EndTime   time.Time

@@ -1,6 +1,7 @@
 package exchange
 
 import (
+	"fmt"
 	"github.com/gorilla/websocket"
 	"time"
 )
@@ -8,18 +9,20 @@ import (
 const wsTimeout = time.Second * 60
 const wsKeepalive = false
 
-type MsgConv = func(StreamId, []byte) (interface{}, error)
+type MsgConv interface {
+	Conv(ChannelId, []byte) (interface{}, error)
+}
 
 type Websocket struct {
-	Sid      StreamId
+	Cid      ChannelId
 	endpoint string
 	msgConv  MsgConv
 	cClose   chan struct{}
 }
 
-func NewWebsocket(sid StreamId, endpoint string, msgConv MsgConv) *Websocket {
+func NewWebsocket(cid ChannelId, endpoint string, msgConv MsgConv) *Websocket {
 	return &Websocket{
-		sid,
+		cid,
 		endpoint,
 		msgConv,
 		nil,
@@ -34,37 +37,39 @@ func (p *Websocket) Close() error {
 }
 
 type WebsocketError struct {
-	Sid StreamId
+	Ws  *Websocket
 	Err error
 }
 
-func (p *Websocket) worker(mc chan interface{}, ec chan WebsocketError) {
-	p.cClose = make(chan struct{})
-	defer func() { close(p.cClose); p.cClose = nil }()
+func (ws *Websocket) worker(mc chan interface{}, ec chan WebsocketError) {
+	ws.cClose = make(chan struct{})
+	defer func() { close(ws.cClose); ws.cClose = nil }()
 
-	c, _, err := websocket.DefaultDialer.Dial(p.endpoint, nil)
+	c, _, err := websocket.DefaultDialer.Dial(ws.endpoint, nil)
 	if err != nil {
-		ec <- WebsocketError{p.Sid, err}
+		ec <- WebsocketError{ws, err}
 		return
 	}
 
 	if wsKeepalive {
-		p.keepAlive(c, wsTimeout, ec)
+		ws.keepAlive(c, wsTimeout, ec)
 	}
 
 	for {
 		select {
-		case <-p.cClose:
+		case <-ws.cClose:
 			return
 		default:
 			_, message, err := c.ReadMessage()
 			if err != nil {
-				ec <- WebsocketError{p.Sid, err}
+				fmt.Println(err)
+				ec <- WebsocketError{ws, err}
 				return
 			}
-			m, err := p.msgConv(p.Sid, message)
+			m, err := ws.msgConv.Conv(ws.Cid, message)
 			if err != nil {
-				ec <- WebsocketError{p.Sid, err}
+				fmt.Println(err)
+				ec <- WebsocketError{ws, err}
 				return
 			}
 			if m != nil {
@@ -74,9 +79,9 @@ func (p *Websocket) worker(mc chan interface{}, ec chan WebsocketError) {
 	}
 }
 
-func (p *Websocket) keepAlive(c *websocket.Conn, timeout time.Duration, ec chan WebsocketError) {
+func (ws *Websocket) keepAlive(c *websocket.Conn, timeout time.Duration, ec chan WebsocketError) {
 
-	switch p.Sid.Channel {
+	switch ws.Cid.Channel {
 	case Candlestick, Trade:
 		return // are updated quite often
 	}
@@ -95,7 +100,7 @@ func (p *Websocket) keepAlive(c *websocket.Conn, timeout time.Duration, ec chan 
 			deadline := time.Now().Add(10 * time.Second)
 			err := c.WriteControl(websocket.PingMessage, []byte{}, deadline)
 			if err != nil {
-				ec <- WebsocketError{p.Sid, err}
+				ec <- WebsocketError{ws, err}
 				return
 			}
 			<-ticker.C
@@ -107,11 +112,11 @@ func (p *Websocket) keepAlive(c *websocket.Conn, timeout time.Duration, ec chan 
 	}()
 }
 
-func (p *Websocket) Subscribe() error {
-	return Collector.Subscribe(p)
+func (ws *Websocket) Subscribe() error {
+	return Collector.Subscribe(ws)
 }
 
-func (p *Websocket) Connect(mc chan interface{}, ec chan WebsocketError) error {
-	go p.worker(mc, ec)
+func (ws *Websocket) Connect(mc chan interface{}, ec chan WebsocketError) error {
+	go ws.worker(mc, ec)
 	return nil
 }

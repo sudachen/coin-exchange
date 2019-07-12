@@ -1,7 +1,8 @@
-package rawmesg
+package internal
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/sudachen/coin-exchange/exchange"
 	"github.com/sudachen/coin-exchange/exchange/message"
 	"strconv"
@@ -37,14 +38,33 @@ type Candlelstick struct {
 	Kline     Kline  `json:"k"`
 }
 
-func CandlelstickDecode(sid exchange.StreamId, m []byte) (*message.Candlestick, error) {
+type CandlelstickCombined struct {
+	Stream string        `json:"stream"`
+	Data   *Candlelstick `json:"data"`
+}
+
+func CandlelstickDecode(combined bool, m []byte) (*message.Candlestick, error) {
+
 	e := Candlelstick{}
-	if err := json.Unmarshal(m, &e); err != nil {
-		return nil, err
+	if combined {
+		c := CandlelstickCombined{Data: &e}
+		if err := json.Unmarshal(m, &c); err != nil {
+			return nil, err
+		}
+	} else {
+		if err := json.Unmarshal(m, &e); err != nil {
+			return nil, err
+		}
+	}
+
+	pair := SymbolToPair(e.Symbol)
+	if pair == nil {
+		return nil, fmt.Errorf("unsupported symbol '%v' in Candlestick message", e.Symbol)
 	}
 
 	mesg := &message.Candlestick{
-		Origin:       sid,
+		Origin:       exchange.Binance,
+		Pair:         *pair,
 		StartTime:    time.Unix(e.Kline.StartTime, 0),
 		EndTime:      time.Unix(e.Kline.EndTime, 0),
 		FirstTradeId: e.Kline.FirstTradeId,

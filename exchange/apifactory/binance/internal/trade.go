@@ -1,7 +1,8 @@
-package rawmesg
+package internal
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/sudachen/coin-exchange/exchange"
 	"github.com/sudachen/coin-exchange/exchange/message"
 	"strconv"
@@ -22,14 +23,33 @@ type Trade struct {
 	IgnoreMe       bool   `json:"M"`
 }
 
-func TradeDecode(sid exchange.StreamId, m []byte) (*message.Trade, error) {
+type TradeCombined struct {
+	Stream string `json:"stream"`
+	Data   *Trade `json:"data"`
+}
+
+func TradeDecode(combined bool, m []byte) (*message.Trade, error) {
+
 	e := Trade{}
-	if err := json.Unmarshal(m, &e); err != nil {
-		return nil, err
+	if combined {
+		c := TradeCombined{Data: &e}
+		if err := json.Unmarshal(m, &c); err != nil {
+			return nil, err
+		}
+	} else {
+		if err := json.Unmarshal(m, &e); err != nil {
+			return nil, err
+		}
+	}
+
+	pair := SymbolToPair(e.Symbol)
+	if pair == nil {
+		return nil, fmt.Errorf("unsupported symbol '%v' in Trade message", e.Symbol)
 	}
 
 	mesg := &message.Trade{
-		Origin:         sid,
+		Origin:         exchange.Binance,
+		Pair:           *pair,
 		TradeId:        e.TradeId,
 		BuyerOrderId:   e.BuyerOrderId,
 		SellerOrderId:  e.SellerOrderId,

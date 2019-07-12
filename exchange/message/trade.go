@@ -6,7 +6,8 @@ import (
 )
 
 type Trade struct {
-	Origin exchange.StreamId
+	Origin exchange.Exchange
+	Pair   exchange.CoinPair
 
 	TradeId int64
 	Price   float32
