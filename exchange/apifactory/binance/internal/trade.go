@@ -53,7 +53,7 @@ func TradeDecode(combined bool, m []byte) (*message.Trade, error) {
 		TradeId:        e.TradeId,
 		BuyerOrderId:   e.BuyerOrderId,
 		SellerOrderId:  e.SellerOrderId,
-		TradeOrderTime: time.Unix(e.TradeOrderTime, 0),
+		TradeOrderTime: time.Unix(e.TradeOrderTime/1000,(e.TradeOrderTime%1000)*1000000),
 	}
 
 	cv := func(s string) float32 {

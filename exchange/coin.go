@@ -16,6 +16,8 @@ const (
 	XRP             // Ripple
 	LTC             // Litecoin
 	BCH             // Bitcoin Cash
+	BNB				// Binance Coin
+	EOS				// EOS
 )
 
 func (c CoinType) String() string {
@@ -32,6 +34,10 @@ func (c CoinType) String() string {
 		return "LTC"
 	case BCH:
 		return "BCH"
+	case BNB:
+		return "BNB"
+	case EOS:
+		return "EOS"
 	}
 	panic("unreachable")
 }
@@ -50,6 +56,10 @@ func CoinFromString(s string) (CoinType, error) {
 		return LTC, nil
 	case "BCH":
 		return BCH, nil
+	case "BNB":
+		return BNB, nil
+	case "EOS":
+		return EOS, nil
 	default:
 		return NoCoin, fmt.Errorf("unknown coin %v", s)
 	}

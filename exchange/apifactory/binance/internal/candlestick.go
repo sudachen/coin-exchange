@@ -65,8 +65,8 @@ func CandlelstickDecode(combined bool, m []byte) (*message.Candlestick, error) {
 	mesg := &message.Candlestick{
 		Origin:       exchange.Binance,
 		Pair:         *pair,
-		StartTime:    time.Unix(e.Kline.StartTime, 0),
-		EndTime:      time.Unix(e.Kline.EndTime, 0),
+		StartTime:    time.Unix(e.Kline.StartTime/1000, (e.Kline.StartTime%1000)*1000000 ),
+		EndTime:      time.Unix(e.Kline.EndTime/1000, (e.Kline.EndTime%1000)*1000000),
 		FirstTradeId: e.Kline.FirstTradeId,
 		LastTradeId:  e.Kline.LastTradeId,
 		TradeNum:     e.Kline.TradeNum,

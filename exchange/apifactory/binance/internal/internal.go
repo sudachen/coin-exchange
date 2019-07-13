@@ -12,6 +12,8 @@ var Coins = map[exchange.CoinType]bool{
 	exchange.XRP: true,
 	exchange.LTC: true,
 	exchange.BCH: true,
+	exchange.BNB: true,
+	exchange.EOS: true,
 }
 
 var Pairs = make(map[string]exchange.CoinPair)
@@ -30,10 +32,10 @@ func init() {
 func MakeSymbol(pair exchange.CoinPair) string {
 	var ccs [2]string
 	for i, cc := range pair {
-		if cc == exchange.USD {
-			ccs[i] = "USDT"
-		} else {
-			ccs[i] = cc.String()
+		switch cc{
+		case exchange.USD: ccs[i] = "USDT"
+		case exchange.BCH: ccs[i] = "BCHABC"
+		default: ccs[i] = cc.String()
 		}
 	}
 	return strings.ToLower(ccs[0] + ccs[1])
