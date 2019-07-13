@@ -32,10 +32,13 @@ func init() {
 func MakeSymbol(pair exchange.CoinPair) string {
 	var ccs [2]string
 	for i, cc := range pair {
-		switch cc{
-		case exchange.USD: ccs[i] = "USDT"
-		case exchange.BCH: ccs[i] = "BCHABC"
-		default: ccs[i] = cc.String()
+		switch cc {
+		case exchange.USD:
+			ccs[i] = "USDT"
+		case exchange.BCH:
+			ccs[i] = "BCHABC"
+		default:
+			ccs[i] = cc.String()
 		}
 	}
 	return strings.ToLower(ccs[0] + ccs[1])

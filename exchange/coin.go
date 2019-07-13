@@ -16,8 +16,8 @@ const (
 	XRP             // Ripple
 	LTC             // Litecoin
 	BCH             // Bitcoin Cash
-	BNB				// Binance Coin
-	EOS				// EOS
+	BNB             // Binance Coin
+	EOS             // EOS
 )
 
 func (c CoinType) String() string {
