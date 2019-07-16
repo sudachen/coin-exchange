@@ -31,11 +31,9 @@ func ExchangeFromString(s string) (Exchange, error) {
 }
 
 type Api interface {
-	Subscribe(pair CoinPair, channel Channel) error
-	SubscribeCombined(pairs []CoinPair, channel Channel) error
+	Subscribe(pairs []CoinPair, channels []Channel) error
 	IsSupported(pair CoinPair) bool
 	FilterSupported(pairs []CoinPair) []CoinPair
-	Unsubscribe(channel Channel) error
 	UnsubscribeAll() error
 }
 

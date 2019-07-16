@@ -4,59 +4,92 @@ import (
 	"fmt"
 	"github.com/sudachen/coin-exchange/exchange"
 	"github.com/sudachen/coin-exchange/exchange/apifactory/binance/internal"
-	"time"
+	"github.com/sudachen/coin-exchange/exchange/ws"
+	"strings"
+	"sync"
 )
 
-const baseURL = "wss://stream.binance.com:9443/ws"
 const combinedBaseURL = "wss://stream.binance.com:9443/stream?streams="
-const wsTimeout = time.Second * 60
-const wsKeepalive = true
+const maxEndpointLength = 1024
 
-type Api struct{}
-type Conv struct{ combined bool }
-
-func (_ *Api) Subscribe(pair exchange.CoinPair, channel exchange.Channel) error {
-	var endpoint string
-	switch channel {
-	case exchange.Candlestick:
-		endpoint = fmt.Sprintf("%s/%s@kline_%s", baseURL, internal.MakeSymbol(pair), "1m")
-	case exchange.Trade:
-		endpoint = fmt.Sprintf("%s/%s@trade", baseURL, internal.MakeSymbol(pair))
-	default:
-		panic("unreachable")
+func New() exchange.Api {
+	return &api{
+		make(map[subsid]*stream),
+		nil,
 	}
-	return exchange.NewWebsocket(
-		exchange.ChannelId{channel, exchange.Binance},
-		endpoint,
-		&Conv{false}).Subscribe()
 }
 
-func (_ *Api) SubscribeCombined(pairs []exchange.CoinPair, channel exchange.Channel) error {
-	endpoint := combinedBaseURL
-	for _, p := range pairs {
-		switch channel {
-		case exchange.Candlestick:
-			endpoint += fmt.Sprintf("%s@kline_%s/", internal.MakeSymbol(p), "1m")
-		case exchange.Trade:
-			endpoint += fmt.Sprintf("%s@trade/", internal.MakeSymbol(p))
-		default:
-			panic("unreachable")
+const maxPairsCountInString = 3
+
+func (st *stream) String() string {
+	var ss1 []string
+	for i,v := range st.pairs {
+		if i < maxPairsCountInString {
+			ss1 = append(ss1, v.String())
+		} else if i == maxPairsCountInString {
+			ss1 = append(ss1,"...")
 		}
 	}
-	endpoint = endpoint[:len(endpoint)-1]
-	return exchange.NewWebsocket(
-		exchange.ChannelId{channel, exchange.Binance},
-		endpoint,
-		&Conv{true}).Subscribe()
-
-	/*return &exchange.UnsupportedError{
-	Message:
-	fmt.Sprintf(
-		"Binance does not suppord combined subscribe on channle %v",
-		channel)}*/
+	var ss2 []string
+	for _,v := range st.channels {
+		ss2 = append(ss2,v.String())
+	}
+	return "St{Binance|"+strings.Join(ss1,",")+"|"+strings.Join(ss2,",")+"}"
 }
 
-func (_ *Api) IsSupported(pair exchange.CoinPair) bool {
+type api struct {
+	subs map[subsid]*stream
+	sts  []*stream
+}
+
+func (a *api) subscribe(st *stream) {
+	for _,channel := range st.channels {
+		for _,pair := range st.pairs {
+			a.subs[subsid{channel,pair}] = st
+		}
+	}
+	ws.Connect(st)
+}
+
+func (a *api) Subscribe(pairs []exchange.CoinPair, channels []exchange.Channel) error {
+	channels = append(channels[:0:0], channels...)
+	st := &stream{ endpoint: combinedBaseURL, channels: channels, mux: &sync.Mutex{} }
+	var sts []*stream
+
+	for _, pair := range a.FilterSupported(pairs) {
+		var ep string
+		for _, channel := range channels {
+			if _, exists := a.subs[subsid{channel, pair }]; !exists {
+				switch channel {
+				case exchange.Candlestick:
+					ep += fmt.Sprintf("%s@kline_%s/", internal.MakeSymbol(pair), "1m")
+				case exchange.Trade:
+					ep += fmt.Sprintf("%s@trade/", internal.MakeSymbol(pair))
+				case exchange.Depth:
+					ep += fmt.Sprintf("%s@depth/", internal.MakeSymbol(pair))
+				default:
+					panic("unreachable")
+				}
+			}
+		}
+		if len(ep) + len(st.endpoint) > maxEndpointLength {
+			sts = append(sts,st)
+			st = &stream{ endpoint: combinedBaseURL, channels: channels, mux: &sync.Mutex{} }
+		}
+		st.endpoint += ep
+		st.pairs = append(st.pairs, pair)
+	}
+
+	sts = append(sts,st)
+
+	for _,st := range sts {
+		a.subscribe(st)
+	}
+
+	return nil
+}
+
+func (a *api) IsSupported(pair exchange.CoinPair) bool {
 	for _, i := range pair {
 		if _, ok := internal.Coins[i]; !ok {
 			return false
@@ -65,38 +98,23 @@ func (_ *Api) IsSupported(pair exchange.CoinPair) bool {
 	return true
 }
 
-func (api *Api) FilterSupported(pairs []exchange.CoinPair) []exchange.CoinPair {
+func (a *api) FilterSupported(pairs []exchange.CoinPair) []exchange.CoinPair {
 	var r []exchange.CoinPair
 	for _, p := range pairs {
-		if api.IsSupported(p) {
+		if a.IsSupported(p) {
 			r = append(r, p)
 		}
 	}
 	return r
 }
 
-func (_ *Api) Unsubscribe(exchange.Channel) error {
-	return nil
-}
-
-func (_ *Api) UnsubscribeAll() error {
-	return nil
-}
-
-func (cv *Conv) Conv(c exchange.ChannelId, m []byte) (interface{}, error) {
-	switch c.Channel {
-	case exchange.Candlestick:
-		if msg, err := internal.CandlelstickDecode(cv.combined, m); err != nil {
-			return nil, err
-		} else {
-			return msg, nil
-		}
-	case exchange.Trade:
-		if msg, err := internal.TradeDecode(cv.combined, m); err != nil {
-			return nil, err
-		} else {
-			return msg, nil
-		}
+func (a *api) UnsubscribeAll() error {
+	for _, st := range a.sts {
+		_ = st.Close()
 	}
-	return nil, nil
+	a.sts = a.sts[:0]
+	a.subs = make(map[subsid]*stream)
+	return nil
 }
+
+

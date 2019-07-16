@@ -82,3 +82,7 @@ func (c *CoinType) UnmarshalYAML(value *yaml.Node) error {
 
 	return nil
 }
+
+func (c CoinPair) String() string {
+	return fmt.Sprintf("%s/%s", c[0].String(), c[1].String())
+}

@@ -28,18 +28,12 @@ type TradeCombined struct {
 	Data   *Trade `json:"data"`
 }
 
-func TradeDecode(combined bool, m []byte) (*message.Trade, error) {
+func TradeDecode(m []byte) (*message.Trade, error) {
 
 	e := Trade{}
-	if combined {
-		c := TradeCombined{Data: &e}
-		if err := json.Unmarshal(m, &c); err != nil {
-			return nil, err
-		}
-	} else {
-		if err := json.Unmarshal(m, &e); err != nil {
-			return nil, err
-		}
+	c := TradeCombined{Data: &e}
+	if err := json.Unmarshal(m, &c); err != nil {
+		return nil, err
 	}
 
 	pair := SymbolToPair(e.Symbol)

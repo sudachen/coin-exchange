@@ -31,30 +31,25 @@ type Kline struct {
 	IgnoreMe string `json:"B"`
 }
 
-type Candlelstick struct {
+type Candlestick struct {
 	EventType string `json:"e"`
 	EventTime int64  `json:"E"`
 	Symbol    string `json:"s"`
 	Kline     Kline  `json:"k"`
 }
 
-type CandlelstickCombined struct {
-	Stream string        `json:"stream"`
-	Data   *Candlelstick `json:"data"`
+type CandlestickCombined struct {
+	Stream string       `json:"stream"`
+	Data   *Candlestick `json:"data"`
 }
 
-func CandlelstickDecode(combined bool, m []byte) (*message.Candlestick, error) {
+func CandlestickDecode(m []byte) (*message.Candlestick, error) {
 
-	e := Candlelstick{}
-	if combined {
-		c := CandlelstickCombined{Data: &e}
-		if err := json.Unmarshal(m, &c); err != nil {
-			return nil, err
-		}
-	} else {
-		if err := json.Unmarshal(m, &e); err != nil {
-			return nil, err
-		}
+	e := Candlestick{}
+	c := CandlestickCombined{Data: &e}
+
+	if err := json.Unmarshal(m, &c); err != nil {
+		return nil, err
 	}
 
 	pair := SymbolToPair(e.Symbol)
