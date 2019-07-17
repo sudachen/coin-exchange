@@ -15,7 +15,6 @@ type Depth struct {
 
 	FirstUpdateId int64
 	LastUpdateId  int64
-	Bids		  []DepthValue
-	Asks		  []DepthValue
+	Bids          []DepthValue
+	Asks          []DepthValue
 }
-

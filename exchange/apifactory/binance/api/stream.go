@@ -17,9 +17,9 @@ type subsid struct {
 type stream struct {
 	endpoint string
 	channels []exchange.Channel
-	pairs []exchange.CoinPair
+	pairs    []exchange.CoinPair
 	// async mutable part
-	ws *ws.Websocket
+	ws  *ws.Websocket
 	mux *sync.Mutex
 }
 
@@ -27,7 +27,7 @@ func (st *stream) Endpoint() string {
 	return st.endpoint
 }
 
-func (st *stream) OnConnect(wes *ws.Websocket) (bool,error) {
+func (st *stream) OnConnect(wes *ws.Websocket) (bool, error) {
 	st.mux.Lock()
 	st.ws = wes
 	st.mux.Unlock()
@@ -96,14 +96,13 @@ func (st *stream) Close() error {
 
 func getChannel(m []byte) exchange.Channel {
 	s := string(m)
-	if strings.Index(s,"@kline_1m\"") > 0 {
+	if strings.Index(s, "@kline_1m\"") > 0 {
 		return exchange.Candlestick
-	} else if strings.Index(s,"@trade\"") > 0 {
+	} else if strings.Index(s, "@trade\"") > 0 {
 		return exchange.Trade
-	} else if strings.Index(s,"@depth\"") > 0 {
+	} else if strings.Index(s, "@depth\"") > 0 {
 		return exchange.Depth
 	} else {
 		return exchange.NoChannel
 	}
 }
-

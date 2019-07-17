@@ -1,6 +1,5 @@
 package exchange
 
-
 type Channel byte
 
 const (
@@ -25,7 +24,7 @@ func (c Channel) String() string {
 
 const MsgQueueLength = 61
 
-type collector struct {Messages chan interface{}}
+type collector struct{ Messages chan interface{} }
 
 var Collector = &collector{
 	make(chan interface{}, MsgQueueLength),
@@ -34,4 +33,3 @@ var Collector = &collector{
 func (m *collector) Next() interface{} {
 	return <-m.Messages
 }
-

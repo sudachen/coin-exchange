@@ -24,18 +24,18 @@ const maxPairsCountInString = 3
 
 func (st *stream) String() string {
 	var ss1 []string
-	for i,v := range st.pairs {
+	for i, v := range st.pairs {
 		if i < maxPairsCountInString {
 			ss1 = append(ss1, v.String())
 		} else if i == maxPairsCountInString {
-			ss1 = append(ss1,"...")
+			ss1 = append(ss1, "...")
 		}
 	}
 	var ss2 []string
-	for _,v := range st.channels {
-		ss2 = append(ss2,v.String())
+	for _, v := range st.channels {
+		ss2 = append(ss2, v.String())
 	}
-	return "St{Binance|"+strings.Join(ss1,",")+"|"+strings.Join(ss2,",")+"}"
+	return "St{Binance|" + strings.Join(ss1, ",") + "|" + strings.Join(ss2, ",") + "}"
 }
 
 type api struct {
@@ -44,24 +44,24 @@ type api struct {
 }
 
 func (a *api) subscribe(st *stream) {
-	for _,channel := range st.channels {
-		for _,pair := range st.pairs {
-			a.subs[subsid{channel,pair}] = st
+	for _, channel := range st.channels {
+		for _, pair := range st.pairs {
+			a.subs[subsid{channel, pair}] = st
 		}
 	}
-	a.sts = append(a.sts,st)
+	a.sts = append(a.sts, st)
 	ws.Connect(st)
 }
 
 func (a *api) Subscribe(pairs []exchange.CoinPair, channels []exchange.Channel) error {
 	channels = append(channels[:0:0], channels...)
-	st := &stream{ endpoint: combinedBaseURL, channels: channels, mux: &sync.Mutex{} }
+	st := &stream{endpoint: combinedBaseURL, channels: channels, mux: &sync.Mutex{}}
 	var sts []*stream
 
 	for _, pair := range a.FilterSupported(pairs) {
 		var ep string
 		for _, channel := range channels {
-			if _, exists := a.subs[subsid{channel, pair }]; !exists {
+			if _, exists := a.subs[subsid{channel, pair}]; !exists {
 				switch channel {
 				case exchange.Candlestick:
 					ep += fmt.Sprintf("%s@kline_%s/", internal.MakeSymbol(pair), "1m")
@@ -74,17 +74,17 @@ func (a *api) Subscribe(pairs []exchange.CoinPair, channels []exchange.Channel) 
 				}
 			}
 		}
-		if len(ep) + len(st.endpoint) > maxEndpointLength {
-			sts = append(sts,st)
-			st = &stream{ endpoint: combinedBaseURL, channels: channels, mux: &sync.Mutex{} }
+		if len(ep)+len(st.endpoint) > maxEndpointLength {
+			sts = append(sts, st)
+			st = &stream{endpoint: combinedBaseURL, channels: channels, mux: &sync.Mutex{}}
 		}
 		st.endpoint += ep
 		st.pairs = append(st.pairs, pair)
 	}
 
-	sts = append(sts,st)
+	sts = append(sts, st)
 
-	for _,st := range sts {
+	for _, st := range sts {
 		a.subscribe(st)
 	}
 
@@ -122,8 +122,10 @@ func (a *api) UnsubscribeAll(timeout time.Duration) error {
 		for _, st := range a.sts {
 			hasConneted = hasConneted || st.isConnected()
 		}
-		if !hasConneted { break }
-		time.Sleep(time.Millisecond*100)
+		if !hasConneted {
+			break
+		}
+		time.Sleep(time.Millisecond * 100)
 	}
 	a.sts = a.sts[:0]
 	if hasConneted {
@@ -131,5 +133,3 @@ func (a *api) UnsubscribeAll(timeout time.Duration) error {
 	}
 	return nil
 }
-
-

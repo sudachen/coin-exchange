@@ -9,7 +9,7 @@ import (
 var apis = make(map[exchange.Exchange]exchange.Api)
 
 func Get(ex exchange.Exchange) exchange.Api {
-	api,ok := apis[ex]
+	api, ok := apis[ex]
 	if !ok {
 		switch ex {
 		case exchange.Binance:

@@ -8,21 +8,21 @@ import (
 )
 
 const (
-	maxReconnectCount = 10
+	maxReconnectCount  = 10
 	slowReconnectCount = 5
 )
 
 const (
-	reconnectTickerTimeout = time.Second*5
-	fastReconnectTimeout = time.Second*10
-	slowReconnectTimeout = time.Minute*5
+	reconnectTickerTimeout = time.Second * 5
+	fastReconnectTimeout   = time.Second * 10
+	slowReconnectTimeout   = time.Minute * 5
 )
 
 const ErrQueueLength = 13
 
 type conError struct {
-	h Handler
-	err error
+	h     Handler
+	err   error
 	fatal bool
 }
 
@@ -39,9 +39,9 @@ func ceWorker() {
 	defer ticker.Stop()
 
 	type RS struct {
-		till time.Time
+		till             time.Time
 		waitForReconnect bool
-		reconnectCount int
+		reconnectCount   int
 	}
 
 	hndls := make(map[Handler]RS)
@@ -65,14 +65,14 @@ func ceWorker() {
 			if e.err == nil {
 				logger.Infof("stream connected successful %v", e.h.String())
 				if exists {
-					delete(hndls,e.h)
+					delete(hndls, e.h)
 				}
 			} else if e.fatal {
 				logger.Errorf("received fatal error from %v: %v",
 					e.h.String(),
 					e.err.Error())
 				e.h.OnFatal(e.err)
-				delete(hndls,e.h)
+				delete(hndls, e.h)
 			} else {
 				logger.Warningf("received non-fatal error from %v: %v",
 					e.h.String(),

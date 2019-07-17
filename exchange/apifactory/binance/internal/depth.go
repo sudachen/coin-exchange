@@ -28,16 +28,14 @@ import (
   ]
 }*/
 
-
-
 type Depth struct {
-	EventType      string 	 	`json:"e"`
-	EventTime      int64  	 	`json:"E"`
-	Symbol         string 	 	`json:"s"`
-	FirstUpdateId  int64  	 	`json:"U"`
-	LastUpdateId   int64  	 	`json:"u"`
-	Bids           [][]string 	`json:"b"`
-	Asks           [][]string 	`json:"a"`
+	EventType     string     `json:"e"`
+	EventTime     int64      `json:"E"`
+	Symbol        string     `json:"s"`
+	FirstUpdateId int64      `json:"U"`
+	LastUpdateId  int64      `json:"u"`
+	Bids          [][]string `json:"b"`
+	Asks          [][]string `json:"a"`
 }
 
 type DepthCombined struct {
@@ -58,12 +56,12 @@ func DepthDecode(m []byte) (*message.Depth, error) {
 	}
 
 	mesg := &message.Depth{
-		Origin:         exchange.Binance,
-		Pair:           *pair,
-		FirstUpdateId:  e.FirstUpdateId,
-		LastUpdateId:   e.LastUpdateId,
-		Bids: 			make([]message.DepthValue,len(e.Bids)),
-		Asks:			make([]message.DepthValue,len(e.Asks)),
+		Origin:        exchange.Binance,
+		Pair:          *pair,
+		FirstUpdateId: e.FirstUpdateId,
+		LastUpdateId:  e.LastUpdateId,
+		Bids:          make([]message.DepthValue, len(e.Bids)),
+		Asks:          make([]message.DepthValue, len(e.Asks)),
 	}
 
 	cv := func(s string) float32 {
@@ -75,12 +73,11 @@ func DepthDecode(m []byte) (*message.Depth, error) {
 	}
 
 	for i, v := range e.Bids {
-		mesg.Bids[i] = message.DepthValue{ cv(v[0]), cv(v[1]) }
+		mesg.Bids[i] = message.DepthValue{cv(v[0]), cv(v[1])}
 	}
 	for i, v := range e.Asks {
-		mesg.Asks[i] = message.DepthValue{ cv(v[0]), cv(v[1]) }
+		mesg.Asks[i] = message.DepthValue{cv(v[0]), cv(v[1])}
 	}
 
 	return mesg, nil
 }
-

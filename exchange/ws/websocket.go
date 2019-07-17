@@ -24,11 +24,11 @@ type Handler interface {
 }
 
 type Websocket struct {
-	conn *websocket.Conn
+	conn    *websocket.Conn
 	handler Handler
-	cClose chan struct{}
-	m *sync.Mutex
-	pp bool
+	cClose  chan struct{}
+	m       *sync.Mutex
+	pp      bool
 }
 
 func connect(handler Handler) {
@@ -43,7 +43,10 @@ func connect(handler Handler) {
 		go ceWorker()
 	}
 
-	wsc := make(chan struct{*websocket.Conn;error})
+	wsc := make(chan struct {
+		*websocket.Conn
+		error
+	})
 
 	go func() {
 		var c *websocket.Conn
@@ -51,29 +54,35 @@ func connect(handler Handler) {
 		defer func() {
 			if r := recover(); r != nil {
 				if err == nil && c != nil {
-					logger.Infof("to late: %#v",c)
+					logger.Infof("to late: %#v", c)
 					_ = c.Close()
-				}else{
-					logger.Infof("to late: %v",err.Error())
+				} else {
+					logger.Infof("to late: %v", err.Error())
 				}
 			}
 		}()
 		c, _, err = websocket.DefaultDialer.Dial(handler.Endpoint(), nil)
-		wsc <- struct{*websocket.Conn;error}{c,err}
+		wsc <- struct {
+			*websocket.Conn
+			error
+		}{c, err}
 		close(wsc)
 	}()
 
-	connected := func(q struct{*websocket.Conn;error}) {
+	connected := func(q struct {
+		*websocket.Conn
+		error
+	}) {
 		if q.error != nil {
 			fatal := false
 			if strings.Index(q.error.Error(), "malformed") >= 0 {
 				fatal = true
 			}
-			ce <- &conError{handler, q.error, fatal }
+			ce <- &conError{handler, q.error, fatal}
 		} else {
-			ws := &Websocket{q.Conn, handler, make(chan struct{}), &sync.Mutex{}, false }
-			fatal,err := handler.OnConnect(ws)
-			ce <- &conError{handler, err, fatal }
+			ws := &Websocket{q.Conn, handler, make(chan struct{}), &sync.Mutex{}, false}
+			fatal, err := handler.OnConnect(ws)
+			ce <- &conError{handler, err, fatal}
 			go ws.worker()
 		}
 	}
@@ -83,11 +92,11 @@ func connect(handler Handler) {
 		case <-time.After(3 * time.Second):
 			logger.Infof("connection timeout")
 			close(wsc)
-			if q, ok:= <-wsc; ok {
+			if q, ok := <-wsc; ok {
 				connected(q)
 				return
 			}
-			ce <- &conError { handler, fmt.Errorf("connection timeout"), false }
+			ce <- &conError{handler, fmt.Errorf("connection timeout"), false}
 			return
 		case q := <-wsc:
 			connected(q)
@@ -121,8 +130,10 @@ func (ws *Websocket) worker() {
 
 	defer func() {
 		ticker.Stop()
-		ws.m.Lock(); ws.cClose = nil; ws.m.Unlock();
-		close(c);
+		ws.m.Lock()
+		ws.cClose = nil
+		ws.m.Unlock()
+		close(c)
 		_ = ws.conn.Close()
 		logger.Infof("stream disconnected %v", ws.handler.String())
 		ws.handler.OnDisconnect()
@@ -161,7 +172,7 @@ func (ws *Websocket) worker() {
 	}
 
 	for atomic.LoadInt32(&isBroken) == 0 {
-		_, message, err := ws.conn.ReadMessage();
+		_, message, err := ws.conn.ReadMessage()
 		select {
 		case <-c:
 			return
@@ -170,7 +181,7 @@ func (ws *Websocket) worker() {
 		}
 		if err != nil {
 			if atomic.CompareAndSwapInt32(&isBroken, 0, 1) {
-				ce <- &conError { ws.handler, fmt.Errorf("connection timeout"), false }
+				ce <- &conError{ws.handler, fmt.Errorf("connection timeout"), false}
 			}
 			return
 		} else if !ws.handler.OnMessage(message) {
@@ -181,4 +192,3 @@ func (ws *Websocket) worker() {
 		}
 	}
 }
-
