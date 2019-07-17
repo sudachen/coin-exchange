@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	wsTimeout = time.Second * 60
+	wsTimeout = time.Second * 120
 )
 
 type Handler interface {
@@ -116,7 +116,7 @@ func (ws *Websocket) KeepAlive() {
 func (ws *Websocket) Close() error {
 	ws.m.Lock()
 	if ws.cClose != nil {
-		ws.cClose <- struct{}{}
+		close(ws.cClose)
 		ws.cClose = nil
 	}
 	ws.m.Unlock()
@@ -126,15 +126,11 @@ func (ws *Websocket) Close() error {
 func (ws *Websocket) worker() {
 	var isBroken int32
 	ticker := time.NewTicker(wsTimeout)
-	c := ws.cClose
+	cClose := ws.cClose
 
 	defer func() {
 		ticker.Stop()
-		ws.m.Lock()
-		ws.cClose = nil
-		ws.m.Unlock()
-		close(c)
-		_ = ws.conn.Close()
+		_ = ws.Close() // close cClose on network error
 		logger.Infof("stream disconnected %v", ws.handler.String())
 		ws.handler.OnDisconnect()
 	}()
@@ -145,20 +141,24 @@ func (ws *Websocket) worker() {
 		return nil
 	})
 
-	if ws.pp {
-		go func() {
-			for atomic.LoadInt32(&isBroken) == 0 {
-				select {
-				case <-c:
-					return
-				case <-ticker.C:
+	go func() {
+		// eeeh...
+		// looks like I have to brake off connection here
+		defer func() { _ = ws.conn.Close() } ()
+
+		for atomic.LoadInt32(&isBroken) == 0 {
+			select {
+			case <-cClose:
+				return
+			case <-ticker.C:
+				if ws.pp { // if we have to check ppp
 					if time.Now().Sub(lastResponse) > wsTimeout {
 						if atomic.CompareAndSwapInt32(&isBroken, 0, 1) {
 							ce <- &conError{ws.handler, fmt.Errorf("ping/pong timeout"), false}
 						}
 						return
 					}
-					deadline := time.Now().Add(30 * time.Second)
+					deadline := time.Now().Add(10 * time.Second)
 					err := ws.conn.WriteControl(websocket.PingMessage, []byte{}, deadline)
 					if err != nil {
 						if atomic.CompareAndSwapInt32(&isBroken, 0, 1) {
@@ -168,13 +168,13 @@ func (ws *Websocket) worker() {
 					}
 				}
 			}
-		}()
-	}
+		}
+	}()
 
 	for atomic.LoadInt32(&isBroken) == 0 {
 		_, message, err := ws.conn.ReadMessage()
 		select {
-		case <-c:
+		case <-cClose:
 			return
 		default:
 			// nothing
