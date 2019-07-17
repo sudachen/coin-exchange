@@ -7,10 +7,11 @@ import (
 	"github.com/sudachen/coin-exchange/exchange/ws"
 	"strings"
 	"sync"
+	"time"
 )
 
 const combinedBaseURL = "wss://stream.binance.com:9443/stream?streams="
-const maxEndpointLength = 1024
+const maxEndpointLength = 1000
 
 func New() exchange.Api {
 	return &api{
@@ -48,6 +49,7 @@ func (a *api) subscribe(st *stream) {
 			a.subs[subsid{channel,pair}] = st
 		}
 	}
+	a.sts = append(a.sts,st)
 	ws.Connect(st)
 }
 
@@ -108,12 +110,25 @@ func (a *api) FilterSupported(pairs []exchange.CoinPair) []exchange.CoinPair {
 	return r
 }
 
-func (a *api) UnsubscribeAll() error {
+func (a *api) UnsubscribeAll(timeout time.Duration) error {
+	hasConneted := true
+	startedAt := time.Now()
+	a.subs = make(map[subsid]*stream)
 	for _, st := range a.sts {
 		_ = st.Close()
 	}
+	for time.Now().Sub(startedAt) < timeout {
+		hasConneted = false
+		for _, st := range a.sts {
+			hasConneted = hasConneted || st.isConnected()
+		}
+		if !hasConneted { break }
+		time.Sleep(time.Millisecond*100)
+	}
 	a.sts = a.sts[:0]
-	a.subs = make(map[subsid]*stream)
+	if hasConneted {
+		return fmt.Errorf("Binance API still has connected streams")
+	}
 	return nil
 }
 

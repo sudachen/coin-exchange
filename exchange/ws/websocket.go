@@ -31,7 +31,7 @@ type Websocket struct {
 	pp bool
 }
 
-func Connect(handler Handler) {
+func connect(handler Handler) {
 
 	//
 	// connection timout workaround
@@ -58,7 +58,6 @@ func Connect(handler Handler) {
 				}
 			}
 		}()
-		logger.Info("connecting")
 		c, _, err = websocket.DefaultDialer.Dial(handler.Endpoint(), nil)
 		wsc <- struct{*websocket.Conn;error}{c,err}
 		close(wsc)
@@ -97,6 +96,10 @@ func Connect(handler Handler) {
 	}
 }
 
+func Connect(handler Handler) {
+	go connect(handler)
+}
+
 func (ws *Websocket) KeepAlive() {
 	ws.pp = true
 }
@@ -121,6 +124,7 @@ func (ws *Websocket) worker() {
 		ws.m.Lock(); ws.cClose = nil; ws.m.Unlock();
 		close(c);
 		_ = ws.conn.Close()
+		logger.Infof("stream disconnected %v", ws.handler.String())
 		ws.handler.OnDisconnect()
 	}()
 

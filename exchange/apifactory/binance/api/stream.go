@@ -40,6 +40,13 @@ func (st *stream) OnDisconnect() {
 	st.mux.Unlock()
 }
 
+func (st *stream) isConnected() bool {
+	st.mux.Lock()
+	connected := st.ws != nil
+	st.mux.Unlock()
+	return connected
+}
+
 func (st *stream) OnMessage(m []byte) bool {
 	switch getChannel(m) {
 	case exchange.Candlestick:
@@ -89,7 +96,7 @@ func (st *stream) Close() error {
 
 func getChannel(m []byte) exchange.Channel {
 	s := string(m)
-	if strings.Index(s,"@kline_\"") > 0 {
+	if strings.Index(s,"@kline_1m\"") > 0 {
 		return exchange.Candlestick
 	} else if strings.Index(s,"@trade\"") > 0 {
 		return exchange.Trade

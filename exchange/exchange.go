@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"gopkg.in/yaml.v3"
 	"strings"
+	"time"
 )
 
 type Exchange byte
@@ -34,7 +35,7 @@ type Api interface {
 	Subscribe(pairs []CoinPair, channels []Channel) error
 	IsSupported(pair CoinPair) bool
 	FilterSupported(pairs []CoinPair) []CoinPair
-	UnsubscribeAll() error
+	UnsubscribeAll(duration time.Duration) error
 }
 
 func (e *Exchange) UnmarshalYAML(value *yaml.Node) error {
