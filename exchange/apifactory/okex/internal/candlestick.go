@@ -10,8 +10,8 @@ import (
 )
 
 type Candlestick struct {
-	Kline []string  	`json:"candle"`
-	Instrument string	`json:"instrument_id"`
+	Kline      []string `json:"candle"`
+	Instrument string   `json:"instrument_id"`
 }
 
 type CandlestickCombined struct {
@@ -28,7 +28,7 @@ func CandlestickDecode(m []byte) ([]*message.Candlestick, error) {
 		return nil, err
 	}
 
-	for _,e := range c.Data {
+	for _, e := range c.Data {
 		pair := SymbolToPair(e.Instrument)
 		if pair == nil {
 			return nil, fmt.Errorf("unsupported symbol '%v' in Candlestick message", e.Instrument)
@@ -42,7 +42,7 @@ func CandlestickDecode(m []byte) ([]*message.Candlestick, error) {
 			}
 		}
 
-		theTime, _:= time.Parse(tmLayout, e.Kline[0])
+		theTime, _ := time.Parse(tmLayout, e.Kline[0])
 
 		mesg := &message.Candlestick{
 			Origin:       exchange.Okex,
@@ -61,7 +61,7 @@ func CandlestickDecode(m []byte) ([]*message.Candlestick, error) {
 		mesg.Volume = cv(e.Kline[5])
 
 		mesg.Interval = 1 //min
-		r = append(r,mesg)
+		r = append(r, mesg)
 	}
 
 	return r, nil

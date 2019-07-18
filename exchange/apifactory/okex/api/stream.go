@@ -19,11 +19,11 @@ func (a *api) Endpoint() string {
 }
 
 type query struct {
-	Op string     `json:"op"`
+	Op   string   `json:"op"`
 	Args []string `json:"args"`
 }
 
-var channels = []exchange.Channel{exchange.Candlestick,exchange.Trade,exchange.Depth}
+var channels = []exchange.Channel{exchange.Candlestick, exchange.Trade, exchange.Depth}
 
 func (a *api) subscribeAll() {
 	//logger.Info("Okex ws subscriber started")
@@ -94,7 +94,7 @@ func (a *api) OnMessage(m []byte) bool {
 			logger.Error(err.Error())
 			return false
 		} else {
-			for _,m := range msg {
+			for _, m := range msg {
 				exchange.Collector.Messages <- m
 			}
 			return true
@@ -104,7 +104,7 @@ func (a *api) OnMessage(m []byte) bool {
 			logger.Error(err.Error())
 			return false
 		} else {
-			for _,m := range msg {
+			for _, m := range msg {
 				exchange.Collector.Messages <- m
 			}
 			return true
@@ -114,7 +114,7 @@ func (a *api) OnMessage(m []byte) bool {
 			logger.Error(err.Error())
 			return false
 		} else {
-			for _,m := range msg {
+			for _, m := range msg {
 				exchange.Collector.Messages <- m
 			}
 			return true
@@ -160,12 +160,12 @@ func (a *api) String() string {
 	a.Lock()
 	cls := make(map[exchange.Channel][]string)
 	for k, _ := range a.subs {
-		ss1, ok := cls[k.channel];
+		ss1, ok := cls[k.channel]
 		if !ok {
-			ss1 = make([]string,0,3)
+			ss1 = make([]string, 0, 3)
 		}
 		if len(ss1) < maxPairsCountInString {
-			ss1 = append(ss1,k.pair.String())
+			ss1 = append(ss1, k.pair.String())
 		} else if len(ss1) == maxPairsCountInString {
 			ss1 = append(ss1, "...")
 		}

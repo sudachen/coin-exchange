@@ -9,10 +9,10 @@ import (
 )
 
 type Depth struct {
-	Timestamp 	string `json:"timestamp"`
-	Instrument 	string `json:"instrument_id"`
-	Asks	    [][]string `json:"asks"`
-	Bids	    [][]string `json:"bids"`
+	Timestamp  string     `json:"timestamp"`
+	Instrument string     `json:"instrument_id"`
+	Asks       [][]string `json:"asks"`
+	Bids       [][]string `json:"bids"`
 }
 
 type DepthCombined struct {
@@ -28,7 +28,7 @@ func DepthDecode(m []byte) ([]*message.Depth, error) {
 		return nil, err
 	}
 
-	for _,e := range c.Data {
+	for _, e := range c.Data {
 		pair := SymbolToPair(e.Instrument)
 		if pair == nil {
 			return nil, fmt.Errorf("unsupported symbol '%v' in Depth message", e.Instrument)
@@ -56,7 +56,7 @@ func DepthDecode(m []byte) ([]*message.Depth, error) {
 			mesg.Asks[i] = message.DepthValue{cv(v[0]), cv(v[1])}
 		}
 
-		r = append(r,mesg)
+		r = append(r, mesg)
 	}
 
 	return r, nil

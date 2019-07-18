@@ -13,15 +13,15 @@ func New() exchange.Api {
 		make(map[subsid]bool),
 		nil,
 		false,
-		&sync.Cond{L:&sync.Mutex{}},
+		&sync.Cond{L: &sync.Mutex{}},
 	}
 }
 
 type api struct {
-	subs map[subsid]bool
-	ws  *ws.Websocket
+	subs    map[subsid]bool
+	ws      *ws.Websocket
 	started bool
-	mux *sync.Cond
+	mux     *sync.Cond
 }
 
 func (a *api) Lock() {
@@ -35,8 +35,8 @@ func (a *api) Unlock() {
 func (a *api) Subscribe(pairs []exchange.CoinPair, channels []exchange.Channel) error {
 	a.Lock()
 	pairs = a.FilterSupported(pairs)
-	for _,c := range channels {
-		for _,p := range pairs {
+	for _, c := range channels {
+		for _, p := range pairs {
 			s := subsid{c, p}
 			if _, ok := a.subs[s]; !ok {
 				a.subs[s] = false
@@ -74,10 +74,9 @@ func (a *api) FilterSupported(pairs []exchange.CoinPair) []exchange.CoinPair {
 
 func (a *api) UnsubscribeAll(timeout time.Duration) error {
 	a.Lock()
-	if a.started && a.ws != nil{
+	if a.started && a.ws != nil {
 		_ = a.ws.Close()
 	}
 	a.Unlock()
 	return nil
 }
-

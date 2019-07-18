@@ -155,7 +155,7 @@ func (ws *Websocket) worker() {
 	go func() {
 		// eeeh...
 		// looks like I have to brake off connection here
-		defer func() { _ = ws.conn.Close() } ()
+		defer func() { _ = ws.conn.Close() }()
 
 		for atomic.LoadInt32(&isBroken) == 0 {
 			select {

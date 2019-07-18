@@ -10,12 +10,12 @@ import (
 )
 
 type Trade struct {
-	Price 		string `json:"price"`
-	Side 		string `json:"side"`
-	Size 		string `json:"size"`
-	Timestamp 	string `json:"timestamp"`
-	TradeId 	string `json:"trade_id"`
-	Instrument 	string `json:"instrument_id"`
+	Price      string `json:"price"`
+	Side       string `json:"side"`
+	Size       string `json:"size"`
+	Timestamp  string `json:"timestamp"`
+	TradeId    string `json:"trade_id"`
+	Instrument string `json:"instrument_id"`
 }
 
 type TradeCombined struct {
@@ -32,7 +32,7 @@ func TradeDecode(m []byte) ([]*message.Trade, error) {
 		return nil, err
 	}
 
-	for _,e := range c.Data {
+	for _, e := range c.Data {
 		pair := SymbolToPair(e.Instrument)
 		if pair == nil {
 			return nil, fmt.Errorf("unsupported symbol '%v' in Trade message", e.Instrument)
@@ -59,7 +59,7 @@ func TradeDecode(m []byte) ([]*message.Trade, error) {
 		mesg.TradeId = int64(cv(e.TradeId))
 		mesg.Price = cv(e.Price)
 		mesg.Qty = cv(e.Size)
-		r = append(r,mesg)
+		r = append(r, mesg)
 	}
 
 	return r, nil

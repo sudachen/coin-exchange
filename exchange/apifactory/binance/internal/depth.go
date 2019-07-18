@@ -64,13 +64,13 @@ type DepthCombined struct {
 */
 
 type Depth5 struct {
-	LastUpdateId  int64      `json:"lastUpdateId"`
-	Bids          [][]string `json:"bids"`
-	Asks          [][]string `json:"asks"`
+	LastUpdateId int64      `json:"lastUpdateId"`
+	Bids         [][]string `json:"bids"`
+	Asks         [][]string `json:"asks"`
 }
 
 type Depth5Combined struct {
-	Stream string `json:"stream"`
+	Stream string  `json:"stream"`
 	Data   *Depth5 `json:"data"`
 }
 
@@ -81,18 +81,18 @@ func DepthDecode(m []byte) (*message.Depth, error) {
 		return nil, err
 	}
 
-	symbol := strings.ToUpper(strings.TrimSuffix(c.Stream,"@depth5"))
+	symbol := strings.ToUpper(strings.TrimSuffix(c.Stream, "@depth5"))
 	pair := SymbolToPair(symbol)
 	if pair == nil {
 		return nil, fmt.Errorf("unsupported symbol '%v' in Depth message", symbol)
 	}
 
 	mesg := &message.Depth{
-		Origin:        exchange.Binance,
-		Pair:          *pair,
-		Timestamp:     time.Now(),
-		Bids:          make([]message.DepthValue, len(e.Bids)),
-		Asks:          make([]message.DepthValue, len(e.Asks)),
+		Origin:    exchange.Binance,
+		Pair:      *pair,
+		Timestamp: time.Now(),
+		Bids:      make([]message.DepthValue, len(e.Bids)),
+		Asks:      make([]message.DepthValue, len(e.Asks)),
 	}
 
 	cv := func(s string) float32 {
