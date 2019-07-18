@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/sudachen/coin-exchange/exchange"
 	binance "github.com/sudachen/coin-exchange/exchange/apifactory/binance/api"
+	okex "github.com/sudachen/coin-exchange/exchange/apifactory/okex/api"
 )
 
 var apis = make(map[exchange.Exchange]exchange.Api)
@@ -14,6 +15,8 @@ func Get(ex exchange.Exchange) exchange.Api {
 		switch ex {
 		case exchange.Binance:
 			api = binance.New()
+		case exchange.Okex:
+			api = okex.New()
 		default:
 			panic(fmt.Sprintf("unknown exchange %v", ex.String()))
 		}

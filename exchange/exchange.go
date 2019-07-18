@@ -12,12 +12,15 @@ type Exchange byte
 const (
 	NoExchange Exchange = iota
 	Binance
+	Okex
 )
 
 func (e Exchange) String() string {
 	switch e {
 	case Binance:
 		return "Binance"
+	case Okex:
+		return "Okex"
 	}
 	panic("unreachable")
 }
@@ -26,6 +29,8 @@ func ExchangeFromString(s string) (Exchange, error) {
 	switch strings.Title(s) {
 	case "Binance":
 		return Binance, nil
+	case "Okex":
+		return Okex, nil
 	default:
 		return NoExchange, fmt.Errorf("unknown exchange platform %v", s)
 	}

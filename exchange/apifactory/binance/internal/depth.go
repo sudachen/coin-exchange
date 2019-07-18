@@ -6,6 +6,8 @@ import (
 	"github.com/sudachen/coin-exchange/exchange"
 	"github.com/sudachen/coin-exchange/exchange/message"
 	"strconv"
+	"strings"
+	"time"
 )
 
 /*{
@@ -27,7 +29,7 @@ import (
     ]
   ]
 }*/
-
+/*
 type Depth struct {
 	EventType     string     `json:"e"`
 	EventTime     int64      `json:"E"`
@@ -42,24 +44,53 @@ type DepthCombined struct {
 	Stream string `json:"stream"`
 	Data   *Depth `json:"data"`
 }
+*/
+/*
+{
+  "lastUpdateId": 160,  // Last update ID
+  "bids": [             // Bids to be updated
+    [
+      "0.0024",         // Price level to be updated
+      "10"              // Quantity
+    ]
+  ],
+  "asks": [             // Asks to be updated
+    [
+      "0.0026",         // Price level to be updated
+      "100"            // Quantity
+    ]
+  ]
+}
+*/
+
+type Depth5 struct {
+	LastUpdateId  int64      `json:"lastUpdateId"`
+	Bids          [][]string `json:"bids"`
+	Asks          [][]string `json:"asks"`
+}
+
+type Depth5Combined struct {
+	Stream string `json:"stream"`
+	Data   *Depth5 `json:"data"`
+}
 
 func DepthDecode(m []byte) (*message.Depth, error) {
-	e := Depth{}
-	c := DepthCombined{Data: &e}
+	e := Depth5{}
+	c := Depth5Combined{Data: &e}
 	if err := json.Unmarshal(m, &c); err != nil {
 		return nil, err
 	}
 
-	pair := SymbolToPair(e.Symbol)
+	symbol := strings.ToUpper(strings.TrimSuffix(c.Stream,"@depth5"))
+	pair := SymbolToPair(symbol)
 	if pair == nil {
-		return nil, fmt.Errorf("unsupported symbol '%v' in Depth message", e.Symbol)
+		return nil, fmt.Errorf("unsupported symbol '%v' in Depth message", symbol)
 	}
 
 	mesg := &message.Depth{
 		Origin:        exchange.Binance,
 		Pair:          *pair,
-		FirstUpdateId: e.FirstUpdateId,
-		LastUpdateId:  e.LastUpdateId,
+		Timestamp:     time.Now(),
 		Bids:          make([]message.DepthValue, len(e.Bids)),
 		Asks:          make([]message.DepthValue, len(e.Asks)),
 	}

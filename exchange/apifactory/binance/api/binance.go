@@ -68,7 +68,7 @@ func (a *api) Subscribe(pairs []exchange.CoinPair, channels []exchange.Channel) 
 				case exchange.Trade:
 					ep += fmt.Sprintf("%s@trade/", internal.MakeSymbol(pair))
 				case exchange.Depth:
-					ep += fmt.Sprintf("%s@depth/", internal.MakeSymbol(pair))
+					ep += fmt.Sprintf("%s@depth5/", internal.MakeSymbol(pair))
 				default:
 					panic("unreachable")
 				}

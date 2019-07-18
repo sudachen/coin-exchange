@@ -1,9 +1,12 @@
 package ws
 
 import (
+	"bytes"
+	"compress/flate"
 	"fmt"
 	"github.com/google/logger"
 	"github.com/gorilla/websocket"
+	"io/ioutil"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -109,6 +112,14 @@ func Connect(handler Handler) {
 	go connect(handler)
 }
 
+func (ws *Websocket) Send(bs []byte) error {
+	return ws.conn.WriteMessage(websocket.TextMessage, bs)
+}
+
+func (ws *Websocket) Conn() *websocket.Conn {
+	return ws.conn
+}
+
 func (ws *Websocket) KeepAlive() {
 	ws.pp = true
 }
@@ -172,7 +183,7 @@ func (ws *Websocket) worker() {
 	}()
 
 	for atomic.LoadInt32(&isBroken) == 0 {
-		_, message, err := ws.conn.ReadMessage()
+		t, message, err := ws.conn.ReadMessage()
 		select {
 		case <-cClose:
 			return
@@ -184,11 +195,13 @@ func (ws *Websocket) worker() {
 				ce <- &conError{ws.handler, fmt.Errorf("connection timeout"), false}
 			}
 			return
-		} else if !ws.handler.OnMessage(message) {
-			//if atomic.CompareAndSwapInt32(&isBroken, 0, 1) {
-			//	ce <- &conError{ws.handler, fmt.Errorf("message error"), false}
-			//}
-			//return
+		} else {
+			if t == websocket.BinaryMessage {
+				r := flate.NewReader(bytes.NewReader(message))
+				message, err = ioutil.ReadAll(r)
+				_ = r.Close()
+			}
+			_ = ws.handler.OnMessage(message)
 		}
 	}
 }

@@ -100,7 +100,7 @@ func getChannel(m []byte) exchange.Channel {
 		return exchange.Candlestick
 	} else if strings.Index(s, "@trade\"") > 0 {
 		return exchange.Trade
-	} else if strings.Index(s, "@depth\"") > 0 {
+	} else if strings.Index(s, "@depth5\"") > 0 {
 		return exchange.Depth
 	} else {
 		return exchange.NoChannel

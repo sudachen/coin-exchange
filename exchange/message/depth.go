@@ -2,6 +2,7 @@ package message
 
 import (
 	"github.com/sudachen/coin-exchange/exchange"
+	"time"
 )
 
 type DepthValue struct {
@@ -12,9 +13,8 @@ type DepthValue struct {
 type Depth struct {
 	Origin exchange.Exchange
 	Pair   exchange.CoinPair
+	Bids   []DepthValue
+	Asks   []DepthValue
 
-	FirstUpdateId int64
-	LastUpdateId  int64
-	Bids          []DepthValue
-	Asks          []DepthValue
+	Timestamp time.Time
 }
