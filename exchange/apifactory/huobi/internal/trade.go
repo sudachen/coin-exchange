@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/sudachen/coin-exchange/exchange"
 	"github.com/sudachen/coin-exchange/exchange/message"
-	"strings"
 	"time"
 )
 
@@ -38,7 +37,7 @@ func TradeDecode(m []byte) ([]*message.Trade, error) {
 	}
 
 	for _, e := range c.Tk.Data {
-		sym := strings.TrimSuffix(c.Ch, ".trade.detail")[7:]
+		sym := c.Ch[:len(c.Ch)-13][7:]
 		pair := SymbolToPair(sym)
 		if pair == nil {
 			return nil, fmt.Errorf("unsupported symbol '%v' in Trade message", sym)

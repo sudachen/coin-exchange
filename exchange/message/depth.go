@@ -19,12 +19,12 @@ type DepthAgg struct {
 }
 
 type Depth struct {
-	Origin    exchange.Exchange
-	Pair      exchange.CoinPair
-	Bids      []DepthValue
-	Asks      []DepthValue
-	AggBids   DepthAgg
-	AggAsks   DepthAgg
+	Origin exchange.Exchange
+	Pair   exchange.CoinPair
+	Bids   []DepthValue
+	Asks   []DepthValue
+	//AggBids   DepthAgg
+	//AggAsks   DepthAgg
 	Timestamp time.Time
 }
 

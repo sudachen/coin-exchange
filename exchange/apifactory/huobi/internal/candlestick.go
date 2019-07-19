@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/sudachen/coin-exchange/exchange"
 	"github.com/sudachen/coin-exchange/exchange/message"
-	"strings"
 	"time"
 )
 
@@ -33,7 +32,7 @@ func CandlestickDecode(m []byte) ([]*message.Candlestick, error) {
 		return nil, err
 	}
 
-	sym := strings.TrimSuffix(c.Ch, ".kline.1min")[7:]
+	sym := c.Ch[:len(c.Ch)-11][7:]
 	pair := SymbolToPair(sym)
 	if pair == nil {
 		return nil, fmt.Errorf("unsupported symbol '%v' in Candlestick message", sym)

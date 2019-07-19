@@ -39,7 +39,7 @@ func (a *api) subscribeAll() {
 			case exchange.Trade:
 				sfx = ".trade.detail"
 			case exchange.Depth:
-				sfx = ".depth.step0"
+				sfx = ".depth.step2"
 			}
 			a.Lock()
 			for k, ready := range a.subs {
@@ -72,7 +72,7 @@ func (a *api) OnConnect(wes *ws.Websocket) (bool, error) {
 	}
 	go a.subscribeAll()
 	a.ws.KeepAlive(func(wes *ws.Websocket) error {
-		err := wes.Send([]byte(fmt.Sprintf("{\"ping\":%v}",time.Now().UnixNano() / int64(time.Millisecond))))
+		err := wes.Send([]byte(fmt.Sprintf("{\"ping\":%v}", time.Now().UnixNano()/int64(time.Millisecond))))
 		return err
 	})
 	a.Unlock()
@@ -128,10 +128,10 @@ func (a *api) OnMessage(m []byte) bool {
 	}
 
 	e := make(map[string]interface{})
-	if err := json.Unmarshal(m,&e); err == nil {
+	if err := json.Unmarshal(m, &e); err == nil {
 		//logger.Infof("%#v",e)
-		if t,ok := e["ping"]; ok {
-			pong := fmt.Sprintf("{\"pong\":%v}",t)
+		if t, ok := e["ping"]; ok {
+			pong := fmt.Sprintf("{\"pong\":%v}", t)
 			//logger.Info(pong)
 			_ = a.ws.Send([]byte(pong))
 		}
@@ -170,7 +170,7 @@ func getChannel(m []byte) exchange.Channel {
 		return exchange.Candlestick
 	} else if strings.Index(s, ".trade.detail\"") > 0 {
 		return exchange.Trade
-	} else if strings.Index(s, ".depth.step0\"") > 0 {
+	} else if strings.Index(s, ".depth.") > 0 {
 		return exchange.Depth
 	} else {
 		return exchange.NoChannel

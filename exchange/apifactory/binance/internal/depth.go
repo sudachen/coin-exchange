@@ -55,15 +55,16 @@ func DepthDecode(m []byte) (*message.Depth, error) {
 		Origin:    exchange.Binance,
 		Pair:      *pair,
 		Timestamp: time.Now(),
+		Bids:      message.MakeDepthValues(e.Bids),
+		Asks:      message.MakeDepthValues(e.Asks),
 	}
 
-	bdp := message.MakeDepthValues(e.Bids)
-	mesg.AggBids = message.CalcDepthAgg(bdp)
-	mesg.Bids = bdp
-
-	adp := message.MakeDepthValues(e.Asks)
-	mesg.AggAsks = message.CalcDepthAgg(adp)
-	mesg.Asks = adp
+	//bdp := message.MakeDepthValues(e.Bids)
+	//mesg.AggBids = message.CalcDepthAgg(bdp)
+	//mesg.Bids = bdp
+	//adp := message.MakeDepthValues(e.Asks)
+	//mesg.AggAsks = message.CalcDepthAgg(adp)
+	//mesg.Asks = adp
 
 	return mesg, nil
 }

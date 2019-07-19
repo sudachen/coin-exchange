@@ -5,7 +5,7 @@ import (
 	"strings"
 )
 
-const DepthSuffix = "@depth10"
+const DepthSuffix = "@depth5"
 
 var Coins = map[exchange.CoinType]bool{
 	exchange.USD: true,
