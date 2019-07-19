@@ -13,6 +13,7 @@ const (
 	NoExchange Exchange = iota
 	Binance
 	Okex
+	Huobi
 )
 
 func (e Exchange) String() string {
@@ -21,6 +22,8 @@ func (e Exchange) String() string {
 		return "Binance"
 	case Okex:
 		return "Okex"
+	case Huobi:
+		return "Huobi"
 	}
 	panic("unreachable")
 }
@@ -31,6 +34,8 @@ func ExchangeFromString(s string) (Exchange, error) {
 		return Binance, nil
 	case "Okex":
 		return Okex, nil
+	case "Huobi":
+		return Huobi, nil
 	default:
 		return NoExchange, fmt.Errorf("unknown exchange platform %v", s)
 	}

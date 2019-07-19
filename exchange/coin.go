@@ -18,6 +18,7 @@ const (
 	BCH             // Bitcoin Cash
 	BNB             // Binance Coin
 	EOS             // EOS
+	ADA             // Cardano
 )
 
 func (c CoinType) String() string {
@@ -38,6 +39,8 @@ func (c CoinType) String() string {
 		return "BNB"
 	case EOS:
 		return "EOS"
+	case ADA:
+		return "ADA"
 	}
 	panic("unreachable")
 }
@@ -60,6 +63,8 @@ func CoinFromString(s string) (CoinType, error) {
 		return BNB, nil
 	case "EOS":
 		return EOS, nil
+	case "ADA":
+		return ADA, nil
 	default:
 		return NoCoin, fmt.Errorf("unknown coin %v", s)
 	}

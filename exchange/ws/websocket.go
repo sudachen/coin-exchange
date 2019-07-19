@@ -3,6 +3,7 @@ package ws
 import (
 	"bytes"
 	"compress/flate"
+	"compress/gzip"
 	"fmt"
 	"github.com/google/logger"
 	"github.com/gorilla/websocket"
@@ -14,7 +15,7 @@ import (
 )
 
 const (
-	wsTimeout = time.Second * 120
+	wsTimeout = 60
 )
 
 type Handler interface {
@@ -26,12 +27,21 @@ type Handler interface {
 	String() string
 }
 
+type Compression byte
+
+const (
+	Defalted Compression = iota
+	Gzipped
+)
+
 type Websocket struct {
 	conn    *websocket.Conn
 	handler Handler
 	cClose  chan struct{}
 	m       *sync.Mutex
-	pp      bool
+	pp      func(*Websocket) error
+	out     chan []byte
+	Compression
 }
 
 func connect(handler Handler) {
@@ -83,7 +93,15 @@ func connect(handler Handler) {
 			}
 			ce <- &conError{handler, q.error, fatal}
 		} else {
-			ws := &Websocket{q.Conn, handler, make(chan struct{}), &sync.Mutex{}, false}
+			ws := &Websocket{
+				q.Conn,
+				handler,
+				make(chan struct{}),
+				&sync.Mutex{},
+				nil,
+				make(chan []byte, 3),
+				Defalted}
+
 			fatal, err := handler.OnConnect(ws)
 			ce <- &conError{handler, err, fatal}
 			go ws.worker()
@@ -113,15 +131,25 @@ func Connect(handler Handler) {
 }
 
 func (ws *Websocket) Send(bs []byte) error {
-	return ws.conn.WriteMessage(websocket.TextMessage, bs)
+	//logger.Infof("WS<=%s\n",string(bs))
+	ws.out <- bs
+	return nil
 }
 
 func (ws *Websocket) Conn() *websocket.Conn {
 	return ws.conn
 }
 
-func (ws *Websocket) KeepAlive() {
-	ws.pp = true
+func (ws *Websocket) KeepAlive(kaf func(*Websocket) error) {
+	ws.pp = kaf
+}
+
+func (ws *Websocket) Ping() error {
+	deadline := time.Now().Add(10 * time.Second)
+	ws.m.Lock()
+	err := ws.conn.WriteControl(websocket.PingMessage, []byte{}, deadline)
+	ws.m.Unlock()
+	return err
 }
 
 func (ws *Websocket) Close() error {
@@ -136,7 +164,7 @@ func (ws *Websocket) Close() error {
 
 func (ws *Websocket) worker() {
 	var isBroken int32
-	ticker := time.NewTicker(wsTimeout)
+	ticker := time.NewTicker(wsTimeout * time.Second / 2)
 	cClose := ws.cClose
 
 	defer func() {
@@ -146,9 +174,14 @@ func (ws *Websocket) worker() {
 		ws.handler.OnDisconnect()
 	}()
 
-	lastResponse := time.Now()
+	var lastResponse int64 = time.Now().Unix()
+	setResponseTime := func() {
+		i := time.Now().Unix()
+		atomic.StoreInt64(&lastResponse, i)
+	}
+
 	ws.conn.SetPongHandler(func(msg string) error {
-		lastResponse = time.Now()
+		setResponseTime()
 		return nil
 	})
 
@@ -161,16 +194,23 @@ func (ws *Websocket) worker() {
 			select {
 			case <-cClose:
 				return
+			case m := <-ws.out:
+				err := ws.conn.WriteMessage(websocket.TextMessage, m)
+				if err != nil {
+					if atomic.CompareAndSwapInt32(&isBroken, 0, 1) {
+						ce <- &conError{ws.handler, err, false}
+					}
+					return
+				}
 			case <-ticker.C:
-				if ws.pp { // if we have to check ppp
-					if time.Now().Sub(lastResponse) > wsTimeout {
+				if ws.pp != nil { // if we have to check ppp
+					if (time.Now().Unix() - atomic.LoadInt64(&lastResponse)) > wsTimeout {
 						if atomic.CompareAndSwapInt32(&isBroken, 0, 1) {
-							ce <- &conError{ws.handler, fmt.Errorf("ping/pong timeout"), false}
+							ce <- &conError{ws.handler, fmt.Errorf("keepalive timeout"), false}
 						}
 						return
 					}
-					deadline := time.Now().Add(10 * time.Second)
-					err := ws.conn.WriteControl(websocket.PingMessage, []byte{}, deadline)
+					err := ws.pp(ws)
 					if err != nil {
 						if atomic.CompareAndSwapInt32(&isBroken, 0, 1) {
 							ce <- &conError{ws.handler, err, false}
@@ -190,16 +230,23 @@ func (ws *Websocket) worker() {
 		default:
 			// nothing
 		}
+		setResponseTime()
 		if err != nil {
 			if atomic.CompareAndSwapInt32(&isBroken, 0, 1) {
-				ce <- &conError{ws.handler, fmt.Errorf("connection timeout"), false}
+				ce <- &conError{ws.handler, fmt.Errorf("network error: %v", err), false}
 			}
 			return
 		} else {
 			if t == websocket.BinaryMessage {
-				r := flate.NewReader(bytes.NewReader(message))
-				message, err = ioutil.ReadAll(r)
-				_ = r.Close()
+				if ws.Compression == Gzipped {
+					r, _ := gzip.NewReader(bytes.NewBuffer(message))
+					message, err = ioutil.ReadAll(r)
+					_ = r.Close()
+				} else {
+					r := flate.NewReader(bytes.NewReader(message))
+					message, err = ioutil.ReadAll(r)
+					_ = r.Close()
+				}
 			}
 			_ = ws.handler.OnMessage(message)
 		}

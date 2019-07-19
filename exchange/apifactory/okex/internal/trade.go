@@ -49,14 +49,12 @@ func TradeDecode(m []byte) ([]*message.Trade, error) {
 		theTime, _ := time.Parse(tmLayout, e.Timestamp)
 
 		mesg := &message.Trade{
-			Origin:         exchange.Okex,
-			Pair:           *pair,
-			BuyerOrderId:   0,
-			SellerOrderId:  0,
-			TradeOrderTime: theTime,
+			Origin:    exchange.Okex,
+			Pair:      *pair,
+			Sell:      e.Side == "sell",
+			Timestamp: theTime,
 		}
 
-		mesg.TradeId = int64(cv(e.TradeId))
 		mesg.Price = cv(e.Price)
 		mesg.Qty = cv(e.Size)
 		r = append(r, mesg)

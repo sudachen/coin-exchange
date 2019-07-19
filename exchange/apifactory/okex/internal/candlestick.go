@@ -45,13 +45,10 @@ func CandlestickDecode(m []byte) ([]*message.Candlestick, error) {
 		theTime, _ := time.Parse(tmLayout, e.Kline[0])
 
 		mesg := &message.Candlestick{
-			Origin:       exchange.Okex,
-			Pair:         *pair,
-			StartTime:    theTime,
-			EndTime:      theTime,
-			FirstTradeId: 0,
-			LastTradeId:  0,
-			TradeNum:     0,
+			Origin:    exchange.Okex,
+			Pair:      *pair,
+			Timestamp: theTime,
+			TradeNum:  0,
 		}
 
 		mesg.Open = cv(e.Kline[1])

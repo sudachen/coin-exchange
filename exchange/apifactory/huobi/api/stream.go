@@ -2,11 +2,13 @@ package api
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/google/logger"
 	"github.com/sudachen/coin-exchange/exchange"
-	"github.com/sudachen/coin-exchange/exchange/apifactory/okex/internal"
+	"github.com/sudachen/coin-exchange/exchange/apifactory/huobi/internal"
 	"github.com/sudachen/coin-exchange/exchange/ws"
 	"strings"
+	"time"
 )
 
 type subsid struct {
@@ -15,41 +17,42 @@ type subsid struct {
 }
 
 func (a *api) Endpoint() string {
-	return "wss://real.okex.com:10442/ws/v3?compress=true"
+	return "wss://api.huobi.pro/ws"
 }
 
 type query struct {
-	Op   string   `json:"op"`
-	Args []string `json:"args"`
+	Sub string `json:"sub"`
+	Id  string `json:"id"`
 }
 
 var channels = []exchange.Channel{exchange.Candlestick, exchange.Trade, exchange.Depth}
+var idCounter = 0
 
 func (a *api) subscribeAll() {
-	//logger.Info("Okex ws subscriber started")
 	for a.isConnected() {
 		for _, c := range channels {
-			var args []string
-			var pfx string
+			var cs []string
+			var sfx string
 			switch c {
 			case exchange.Candlestick:
-				pfx = "spot/candle60s:"
+				sfx = ".kline.1min"
 			case exchange.Trade:
-				pfx = "spot/trade:"
+				sfx = ".trade.detail"
 			case exchange.Depth:
-				pfx = "spot/depth5:"
+				sfx = ".depth.step0"
 			}
 			a.Lock()
 			for k, ready := range a.subs {
 				if !ready && k.channel == c {
-					args = append(args, pfx+internal.MakeSymbol(k.pair))
+					cs = append(cs, "market."+internal.MakeSymbol(k.pair)+sfx)
 					a.subs[k] = true
 				}
 			}
 			wes := a.ws
 			a.Unlock()
-			if len(args) > 0 {
-				q := &query{"subscribe", args}
+			for _, c := range cs {
+				idCounter += 1
+				q := &query{c, fmt.Sprintf("%d", idCounter)}
 				bs, _ := json.Marshal(q)
 				_ = wes.Send(bs)
 			}
@@ -58,18 +61,18 @@ func (a *api) subscribeAll() {
 		a.mux.Wait()
 		a.Unlock()
 	}
-	//logger.Info("Okex ws subscriber finished")
 }
 
 func (a *api) OnConnect(wes *ws.Websocket) (bool, error) {
 	a.Lock()
 	a.ws = wes
+	wes.Compression = ws.Gzipped
 	for k, _ := range a.subs {
 		a.subs[k] = false
 	}
 	go a.subscribeAll()
 	a.ws.KeepAlive(func(wes *ws.Websocket) error {
-		err := wes.Send([]byte("ping"))
+		err := wes.Send([]byte(fmt.Sprintf("{\"ping\":%v}",time.Now().UnixNano() / int64(time.Millisecond))))
 		return err
 	})
 	a.Unlock()
@@ -123,6 +126,17 @@ func (a *api) OnMessage(m []byte) bool {
 			return true
 		}
 	}
+
+	e := make(map[string]interface{})
+	if err := json.Unmarshal(m,&e); err == nil {
+		//logger.Infof("%#v",e)
+		if t,ok := e["ping"]; ok {
+			pong := fmt.Sprintf("{\"pong\":%v}",t)
+			//logger.Info(pong)
+			_ = a.ws.Send([]byte(pong))
+		}
+	}
+
 	return true
 }
 
@@ -149,11 +163,14 @@ func getChannel(m []byte) exchange.Channel {
 		m = m[:80]
 	}
 	s := string(m)
-	if strings.Index(s, "\"spot/candle60s\"") > 0 {
+	if strings.Index(s, "\"status\":\"") > 0 {
+		return exchange.NoChannel
+	}
+	if strings.Index(s, ".kline.1min\"") > 0 {
 		return exchange.Candlestick
-	} else if strings.Index(s, "\"spot/trade\"") > 0 {
+	} else if strings.Index(s, ".trade.detail\"") > 0 {
 		return exchange.Trade
-	} else if strings.Index(s, "\"spot/depth5\"") > 0 {
+	} else if strings.Index(s, ".depth.step0\"") > 0 {
 		return exchange.Depth
 	} else {
 		return exchange.NoChannel
@@ -182,5 +199,5 @@ func (a *api) String() string {
 		ss2 = append(ss2, k.String()+":"+strings.Join(v, ","))
 	}
 	a.Unlock()
-	return "St{Okex|" + strings.Join(ss2, ";") + "}"
+	return "St{Huobi|" + strings.Join(ss2, ";") + "}"
 }

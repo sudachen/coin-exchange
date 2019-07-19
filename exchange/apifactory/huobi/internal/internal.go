@@ -5,7 +5,7 @@ import (
 	"strings"
 )
 
-const DepthSuffix = "@depth10"
+const tmLayout = "2006-01-02T15:04:05.000Z"
 
 var Coins = map[exchange.CoinType]bool{
 	exchange.USD: true,
@@ -14,7 +14,6 @@ var Coins = map[exchange.CoinType]bool{
 	exchange.XRP: true,
 	exchange.LTC: true,
 	exchange.BCH: true,
-	exchange.BNB: true,
 	exchange.EOS: true,
 	exchange.ADA: true,
 }
@@ -26,7 +25,7 @@ func init() {
 		for c2, _ := range Coins {
 			if c1 != c2 {
 				pair := exchange.CoinPair{c1, c2}
-				Pairs[strings.ToUpper(MakeSymbol(pair))] = pair
+				Pairs[MakeSymbol(pair)] = pair
 			}
 		}
 	}
@@ -38,8 +37,6 @@ func MakeSymbol(pair exchange.CoinPair) string {
 		switch cc {
 		case exchange.USD:
 			ccs[i] = "USDT"
-		case exchange.BCH:
-			ccs[i] = "BCHABC"
 		default:
 			ccs[i] = cc.String()
 		}

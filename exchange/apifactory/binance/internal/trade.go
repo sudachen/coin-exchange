@@ -42,12 +42,10 @@ func TradeDecode(m []byte) (*message.Trade, error) {
 	}
 
 	mesg := &message.Trade{
-		Origin:         exchange.Binance,
-		Pair:           *pair,
-		TradeId:        e.TradeId,
-		BuyerOrderId:   e.BuyerOrderId,
-		SellerOrderId:  e.SellerOrderId,
-		TradeOrderTime: time.Unix(e.TradeOrderTime/1000, (e.TradeOrderTime%1000)*1000000),
+		Origin:    exchange.Binance,
+		Pair:      *pair,
+		Sell:      !e.IsBuyerMarket,
+		Timestamp: time.Unix(e.TradeOrderTime/1000, (e.TradeOrderTime%1000)*1000000),
 	}
 
 	cv := func(s string) float32 {

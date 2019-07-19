@@ -9,13 +9,9 @@ type Candlestick struct {
 	Origin exchange.Exchange
 	Pair   exchange.CoinPair
 
-	StartTime time.Time
-	EndTime   time.Time
+	Timestamp time.Time
 	Interval  int32
 	TradeNum  int32
-
-	FirstTradeId int64
-	LastTradeId  int64
 
 	Open   float32
 	Close  float32

@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"github.com/sudachen/coin-exchange/exchange"
 	"github.com/sudachen/coin-exchange/exchange/message"
-	"strconv"
+	"time"
 )
 
 type Depth struct {
@@ -34,27 +34,21 @@ func DepthDecode(m []byte) ([]*message.Depth, error) {
 			return nil, fmt.Errorf("unsupported symbol '%v' in Depth message", e.Instrument)
 		}
 
+		theTime, _ := time.Parse(tmLayout, e.Timestamp)
+
 		mesg := &message.Depth{
-			Origin: exchange.Okex,
-			Pair:   *pair,
-			Bids:   make([]message.DepthValue, len(e.Bids)),
-			Asks:   make([]message.DepthValue, len(e.Asks)),
+			Origin:    exchange.Okex,
+			Pair:      *pair,
+			Timestamp: theTime,
 		}
 
-		cv := func(s string) float32 {
-			if f, err := strconv.ParseFloat(s, 32); err != nil {
-				return 0
-			} else {
-				return float32(f)
-			}
-		}
+		bdp := message.MakeDepthValues(e.Bids)
+		mesg.AggBids = message.CalcDepthAgg(bdp)
+		mesg.Bids = bdp
 
-		for i, v := range e.Bids {
-			mesg.Bids[i] = message.DepthValue{cv(v[0]), cv(v[1])}
-		}
-		for i, v := range e.Asks {
-			mesg.Asks[i] = message.DepthValue{cv(v[0]), cv(v[1])}
-		}
+		adp := message.MakeDepthValues(e.Asks)
+		mesg.AggAsks = message.CalcDepthAgg(adp)
+		mesg.Asks = adp
 
 		r = append(r, mesg)
 	}

@@ -6,14 +6,10 @@ import (
 )
 
 type Trade struct {
-	Origin exchange.Exchange
-	Pair   exchange.CoinPair
-
-	TradeId int64
-	Price   float32
-	Qty     float32
-
-	BuyerOrderId   int64
-	SellerOrderId  int64
-	TradeOrderTime time.Time
+	Origin    exchange.Exchange
+	Pair      exchange.CoinPair
+	Price     float32
+	Qty       float32
+	Sell      bool
+	Timestamp time.Time
 }

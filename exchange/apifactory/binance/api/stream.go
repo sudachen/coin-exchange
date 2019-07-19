@@ -95,12 +95,16 @@ func (st *stream) Close() error {
 }
 
 func getChannel(m []byte) exchange.Channel {
+	if len(m) > 80 {
+		m = m[:80]
+	}
 	s := string(m)
+	//fmt.Println(s,internal.DepthSuffix)
 	if strings.Index(s, "@kline_1m\"") > 0 {
 		return exchange.Candlestick
 	} else if strings.Index(s, "@trade\"") > 0 {
 		return exchange.Trade
-	} else if strings.Index(s, "@depth5\"") > 0 {
+	} else if strings.Index(s, internal.DepthSuffix) > 0 {
 		return exchange.Depth
 	} else {
 		return exchange.NoChannel
