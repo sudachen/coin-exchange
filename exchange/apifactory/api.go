@@ -6,6 +6,8 @@ import (
 	binance "github.com/sudachen/coin-exchange/exchange/apifactory/binance/api"
 	huobi "github.com/sudachen/coin-exchange/exchange/apifactory/huobi/api"
 	okex "github.com/sudachen/coin-exchange/exchange/apifactory/okex/api"
+	"sync"
+	"time"
 )
 
 var apis = make(map[exchange.Exchange]exchange.Api)
@@ -27,3 +29,12 @@ func Get(ex exchange.Exchange) exchange.Api {
 	}
 	return api
 }
+
+func UnsubscribeAll(timeout time.Duration) {
+	wg := sync.WaitGroup{}
+	for _, api := range apis {
+		api.UnsubscribeAll(timeout,&wg)
+	}
+	wg.Wait()
+}
+
