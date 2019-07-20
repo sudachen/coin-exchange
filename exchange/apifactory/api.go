@@ -33,8 +33,7 @@ func Get(ex exchange.Exchange) exchange.Api {
 func UnsubscribeAll(timeout time.Duration) {
 	wg := sync.WaitGroup{}
 	for _, api := range apis {
-		api.UnsubscribeAll(timeout,&wg)
+		api.UnsubscribeAll(timeout, &wg)
 	}
 	wg.Wait()
 }
-

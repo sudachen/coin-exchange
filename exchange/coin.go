@@ -76,6 +76,7 @@ func CoinFromString(s string) (CoinType, error) {
 }
 
 type CoinPair [2]CoinType
+
 var NoPair = CoinPair{NoCoin, NoCoin}
 
 func (c *CoinType) UnmarshalYAML(value *yaml.Node) error {
@@ -101,19 +102,19 @@ func (c CoinPair) AsInt() int32 {
 }
 
 func (c *CoinPair) FromInt(a int32) *CoinPair {
-	*c = CoinPair{CoinType(a/256),CoinType(a%256)}
+	*c = CoinPair{CoinType(a / 256), CoinType(a % 256)}
 	return c
 }
 
-func PairFromString(s string) (CoinPair, error){
-	cs := strings.Split(s,"/")
+func PairFromString(s string) (CoinPair, error) {
+	cs := strings.Split(s, "/")
 	if len(cs) != 2 {
 		return CoinPair{}, fmt.Errorf("'%v' is not coin pair", s)
 	}
 	p := CoinPair{}
 	var err error
-	for  i := 0; i < 2; i++ {
-		if p[i],err = CoinFromString(cs[i]); err != nil {
+	for i := 0; i < 2; i++ {
+		if p[i], err = CoinFromString(cs[i]); err != nil {
 			return CoinPair{}, err
 		}
 	}

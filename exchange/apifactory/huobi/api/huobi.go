@@ -75,7 +75,9 @@ func (a *api) FilterSupported(pairs []exchange.CoinPair) []exchange.CoinPair {
 
 func (a *api) UnsubscribeAll(timeout time.Duration, wg *sync.WaitGroup) {
 	wwg := wg
-	if wg == nil { wwg = &sync.WaitGroup{} }
+	if wg == nil {
+		wwg = &sync.WaitGroup{}
+	}
 	wwg.Add(1)
 	go func() {
 		a.Lock()
@@ -96,5 +98,7 @@ func (a *api) UnsubscribeAll(timeout time.Duration, wg *sync.WaitGroup) {
 		}
 		wwg.Done()
 	}()
-	if wg == nil { wwg.Wait() }
+	if wg == nil {
+		wwg.Wait()
+	}
 }
