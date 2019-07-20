@@ -2,6 +2,7 @@ package api
 
 import (
 	"fmt"
+	"github.com/google/logger"
 	"github.com/sudachen/coin-exchange/exchange"
 	"github.com/sudachen/coin-exchange/exchange/apifactory/binance/internal"
 	"github.com/sudachen/coin-exchange/exchange/ws"
@@ -110,26 +111,33 @@ func (a *api) FilterSupported(pairs []exchange.CoinPair) []exchange.CoinPair {
 	return r
 }
 
-func (a *api) UnsubscribeAll(timeout time.Duration) error {
-	hasConneted := true
-	startedAt := time.Now()
-	a.subs = make(map[subsid]*stream)
-	for _, st := range a.sts {
-		_ = st.Close()
-	}
-	for time.Now().Sub(startedAt) < timeout {
-		hasConneted = false
+func (a *api) UnsubscribeAll(timeout time.Duration, wg *sync.WaitGroup) {
+	wwg := wg
+	if wg == nil { wwg = &sync.WaitGroup{} }
+	wwg.Add(1)
+	go func() {
+		hasConneted := true
+		startedAt := time.Now()
+		a.subs = make(map[subsid]*stream)
 		for _, st := range a.sts {
-			hasConneted = hasConneted || st.isConnected()
+			_ = st.Close()
 		}
-		if !hasConneted {
-			break
+		for time.Now().Sub(startedAt) < timeout {
+			hasConneted = false
+			for _, st := range a.sts {
+				hasConneted = hasConneted || st.isConnected()
+			}
+			if !hasConneted {
+				break
+			}
+			time.Sleep(time.Millisecond * 100)
 		}
-		time.Sleep(time.Millisecond * 100)
-	}
-	a.sts = a.sts[:0]
-	if hasConneted {
-		return fmt.Errorf("Binance API still has connected streams")
-	}
-	return nil
+		a.sts = a.sts[:0]
+		if hasConneted {
+			logger.Errorf("Binance API still has connected streams")
+		}
+		wwg.Done()
+	}()
+	if wg == nil { wwg.Wait() }
 }
+

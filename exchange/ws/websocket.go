@@ -110,7 +110,7 @@ func connect(handler Handler) {
 
 	for {
 		select {
-		case <-time.After(3 * time.Second):
+		case <-time.After(5 * time.Second):
 			logger.Infof("connection timeout")
 			close(wsc)
 			if q, ok := <-wsc; ok {

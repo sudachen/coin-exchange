@@ -1,6 +1,7 @@
 package api
 
 import (
+	"github.com/google/logger"
 	"github.com/sudachen/coin-exchange/exchange"
 	"github.com/sudachen/coin-exchange/exchange/apifactory/okex/internal"
 	"github.com/sudachen/coin-exchange/exchange/ws"
@@ -72,11 +73,28 @@ func (a *api) FilterSupported(pairs []exchange.CoinPair) []exchange.CoinPair {
 	return r
 }
 
-func (a *api) UnsubscribeAll(timeout time.Duration) error {
-	a.Lock()
-	if a.started && a.ws != nil {
-		_ = a.ws.Close()
-	}
-	a.Unlock()
-	return nil
+func (a *api) UnsubscribeAll(timeout time.Duration, wg *sync.WaitGroup) {
+	wwg := wg
+	if wg == nil { wwg = &sync.WaitGroup{} }
+	wwg.Add(1)
+	go func() {
+		a.Lock()
+		if a.started && a.ws != nil {
+			_ = a.ws.Close()
+		}
+		a.Unlock()
+		startedAt := time.Now()
+		isConnected := false
+		for time.Now().Sub(startedAt) < timeout {
+			if isConnected = a.isConnected(); !isConnected {
+				break
+			}
+			time.Sleep(time.Millisecond * 100)
+		}
+		if isConnected {
+			logger.Errorf("Okex API still connected")
+		}
+		wwg.Done()
+	}()
+	if wg == nil { wwg.Wait() }
 }

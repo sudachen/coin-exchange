@@ -28,6 +28,8 @@ func DepthDecode(m []byte) ([]*message.Depth, error) {
 		return nil, err
 	}
 
+	//logger.Infof("%#v",c)
+
 	for _, e := range c.Data {
 		pair := SymbolToPair(e.Instrument)
 		if pair == nil {

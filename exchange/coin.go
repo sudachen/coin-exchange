@@ -19,6 +19,7 @@ const (
 	BNB             // Binance Coin
 	EOS             // EOS
 	ADA             // Cardano
+	ETC             // Ethereum Classic
 )
 
 func (c CoinType) String() string {
@@ -41,6 +42,8 @@ func (c CoinType) String() string {
 		return "EOS"
 	case ADA:
 		return "ADA"
+	case ETC:
+		return "ETC"
 	}
 	panic("unreachable")
 }
@@ -65,13 +68,14 @@ func CoinFromString(s string) (CoinType, error) {
 		return EOS, nil
 	case "ADA":
 		return ADA, nil
+	case "ETC":
+		return ETC, nil
 	default:
 		return NoCoin, fmt.Errorf("unknown coin %v", s)
 	}
 }
 
 type CoinPair [2]CoinType
-
 var NoPair = CoinPair{NoCoin, NoCoin}
 
 func (c *CoinType) UnmarshalYAML(value *yaml.Node) error {
@@ -90,4 +94,28 @@ func (c *CoinType) UnmarshalYAML(value *yaml.Node) error {
 
 func (c CoinPair) String() string {
 	return fmt.Sprintf("%s/%s", c[0].String(), c[1].String())
+}
+
+func (c CoinPair) AsInt() int32 {
+	return int32(c[0])*256 + int32(c[1])
+}
+
+func (c *CoinPair) FromInt(a int32) *CoinPair {
+	*c = CoinPair{CoinType(a/256),CoinType(a%256)}
+	return c
+}
+
+func PairFromString(s string) (CoinPair, error){
+	cs := strings.Split(s,"/")
+	if len(cs) != 2 {
+		return CoinPair{}, fmt.Errorf("'%v' is not coin pair", s)
+	}
+	p := CoinPair{}
+	var err error
+	for  i := 0; i < 2; i++ {
+		if p[i],err = CoinFromString(cs[i]); err != nil {
+			return CoinPair{}, err
+		}
+	}
+	return p, nil
 }

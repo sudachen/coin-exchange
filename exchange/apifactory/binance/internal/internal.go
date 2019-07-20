@@ -17,6 +17,7 @@ var Coins = map[exchange.CoinType]bool{
 	exchange.BNB: true,
 	exchange.EOS: true,
 	exchange.ADA: true,
+	exchange.ETC: true,
 }
 
 var Pairs = make(map[string]exchange.CoinPair)
