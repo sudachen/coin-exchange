@@ -20,4 +20,3 @@ type QueryApi interface {
 	QueryTrades(count int32) (*Trades, error)
 	QueryCandlesticks(interval int32, count int32) (*Candlesticks, error)
 }
-

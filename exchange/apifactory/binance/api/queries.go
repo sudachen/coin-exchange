@@ -30,15 +30,15 @@ func (a *api) Queries(pair exchange.CoinPair) (message.QueryApi, error) {
 			a,
 			pair,
 			&http.Client{
-				Timeout: 10*time.Second,
+				Timeout: 10 * time.Second,
 				Transport: &http.Transport{
 					MaxIdleConnsPerHost: 6,
-					TLSHandshakeTimeout: 3*time.Second,
+					TLSHandshakeTimeout: 3 * time.Second,
 				},
 			},
 		}, nil
 	} else {
-		return nil, &exchange.UnsupportedPair{exchange.Binance, pair }
+		return nil, &exchange.UnsupportedPair{exchange.Binance, pair}
 	}
 }
 
@@ -63,9 +63,9 @@ func (q *queries) QueryTrades(count int32) (*message.Trades, error) {
 		return nil, err
 	} else {
 		return &message.Trades{
-			Origin:    exchange.Binance,
-			Pair:      q.Pair,
-			Values:    trades.ToValues(),
+			Origin: exchange.Binance,
+			Pair:   q.Pair,
+			Values: trades.ToValues(),
 		}, nil
 	}
 }
@@ -97,8 +97,8 @@ func (q *queries) QueryCandlesticks(interval int32, count int32) (*message.Candl
 		r := &message.Candlesticks{}
 		r.Pair = q.Pair
 		r.Origin = exchange.Binance
-		r.Klines = make([]message.Kline,len(klines))
-		for i,v := range klines {
+		r.Klines = make([]message.Kline, len(klines))
+		for i, v := range klines {
 			r.Klines[i] = v.Kline
 			r.Klines[i].Interval = minutes
 		}
@@ -106,14 +106,14 @@ func (q *queries) QueryCandlesticks(interval int32, count int32) (*message.Candl
 	}
 }
 
-func (q *queries) query(api string, limit int32, interval string, result interface{}) error{
+func (q *queries) query(api string, limit int32, interval string, result interface{}) error {
 	symbol := strings.ToUpper(internal.MakeSymbol(q.Pair))
-	url := apiUrl + api + "?symbol="+symbol
+	url := apiUrl + api + "?symbol=" + symbol
 	if limit > 0 {
-		url += fmt.Sprintf("&limit=%d",limit)
+		url += fmt.Sprintf("&limit=%d", limit)
 	}
 	if interval != "" {
-		url += "&interval="+interval
+		url += "&interval=" + interval
 	}
 
 	//logger.Info(url)
@@ -130,18 +130,18 @@ func (q *queries) query(api string, limit int32, interval string, result interfa
 				return err
 			} else {
 				if resp.StatusCode >= 400 {
-					apiErr := &apiError{ Pair: q.Pair, Origin: exchange.Binance }
+					apiErr := &apiError{Pair: q.Pair, Origin: exchange.Binance}
 					_ = json.Unmarshal(body, apiErr)
 					if apiErr.Code == -1121 { // invalid symbol
 						q.api.m.Lock()
 						q.api.exclude[q.Pair] = true
 						q.api.m.Unlock()
-						return &exchange.UnsupportedPair{exchange.Binance, q.Pair }
+						return &exchange.UnsupportedPair{exchange.Binance, q.Pair}
 					}
 					return apiErr
 				} else {
 					if resp != nil {
-						err := json.Unmarshal(body,result)
+						err := json.Unmarshal(body, result)
 						if err != nil {
 							return err
 						}
@@ -165,9 +165,9 @@ func (k *Kline) UnmarshalJSON(b []byte) error {
 		return err
 	}
 
-	k.Timestamp = time.Unix(int64(s[0].(float64))/1000,0)
+	k.Timestamp = time.Unix(int64(s[0].(float64))/1000, 0)
 
-	cv := func (i int) float32 {
+	cv := func(i int) float32 {
 		if f, err := strconv.ParseFloat(s[1].(string), 64); err != nil {
 			return 0
 		} else {
@@ -177,9 +177,9 @@ func (k *Kline) UnmarshalJSON(b []byte) error {
 
 	k.Open = cv(1)
 	k.High = cv(2)
-	k.Low  = cv(3)
+	k.Low = cv(3)
 	k.Close = cv(4)
-	k.Volume  = cv( 5)
+	k.Volume = cv(5)
 
 	k.TradeNum = int32(s[8].(float64))
 
@@ -189,10 +189,10 @@ func (k *Kline) UnmarshalJSON(b []byte) error {
 type apiError struct {
 	Origin  exchange.Exchange `json:"-"`
 	Pair    exchange.CoinPair `json:"-"`
-	Code    int64  `json:"code"`
-	Message string `json:"msg"`
+	Code    int64             `json:"code"`
+	Message string            `json:"msg"`
 }
 
 func (e *apiError) Error() string {
-	return fmt.Sprintf("apiError{%v|%v on %v:%v}",e.Code,e.Message,e.Origin.String(),e.Pair.String())
+	return fmt.Sprintf("apiError{%v|%v on %v:%v}", e.Code, e.Message, e.Origin.String(), e.Pair.String())
 }

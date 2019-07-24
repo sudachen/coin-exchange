@@ -3,6 +3,7 @@ package channel
 import "fmt"
 
 type Channel int32
+
 const (
 	NoChannel Channel = iota
 	Candlestick
@@ -10,7 +11,7 @@ const (
 	Depth
 )
 
-const AnotherChannel Channel = Depth+1
+const AnotherChannel Channel = Depth + 1
 
 func (c Channel) String() string {
 	switch c {

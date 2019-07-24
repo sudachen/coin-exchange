@@ -127,5 +127,5 @@ type UnsupportedPair struct {
 }
 
 func (e *UnsupportedPair) Error() string {
-	return fmt.Sprintf("UnsupportedPair{%v:%v}",e.Exchange.String(),e.CoinPair.String())
+	return fmt.Sprintf("UnsupportedPair{%v:%v}", e.Exchange.String(), e.CoinPair.String())
 }

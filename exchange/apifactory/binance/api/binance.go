@@ -17,16 +17,16 @@ const combinedBaseURL = "wss://stream.binance.com:9443/stream?streams="
 const maxEndpointLength = 1000
 
 func New() message.Api {
-	 a := &api{
+	a := &api{
 		make(map[subsid]*stream),
 		nil,
 		make(map[exchange.CoinPair]bool),
 		sync.Mutex{},
-	 }
-	 for i, _ := range internal.Excluded {
-	 	a.exclude[i] = true
-	 }
-	 return a
+	}
+	for i, _ := range internal.Excluded {
+		a.exclude[i] = true
+	}
+	return a
 }
 
 const maxPairsCountInString = 3
@@ -48,10 +48,10 @@ func (st *stream) String() string {
 }
 
 type api struct {
-	subs map[subsid]*stream
-	sts  []*stream
+	subs    map[subsid]*stream
+	sts     []*stream
 	exclude map[exchange.CoinPair]bool
-	m	 sync.Mutex
+	m       sync.Mutex
 }
 
 func (a *api) subscribe(st *stream) {

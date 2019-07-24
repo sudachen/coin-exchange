@@ -61,6 +61,3 @@ func DepthDecode(m []byte) (*message.Orders, error) {
 
 	return mesg, nil
 }
-
-
-

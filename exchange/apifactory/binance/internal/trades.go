@@ -11,14 +11,14 @@ import (
 type Trade struct {
 	//EventType      string `json:"e"`
 	//EventTime      int64  `json:"E"`
-	Symbol         string `json:"s"`
+	Symbol string `json:"s"`
 	//TradeId        int64  `json:"t"`
-	Price          float32 `json:"p,string"`
-	Qty            float32 `json:"q,string"`
+	Price float32 `json:"p,string"`
+	Qty   float32 `json:"q,string"`
 	//BuyerOrderId   int64  `json:"b"`
 	//SellerOrderId  int64  `json:"a"`
-	TradeOrderTime int64  `json:"T"`
-	IsBuyerMarket  bool   `json:"m"`
+	TradeOrderTime int64 `json:"T"`
+	IsBuyerMarket  bool  `json:"m"`
 	//IgnoreMe       bool   `json:"M"`
 }
 
@@ -41,13 +41,13 @@ func TradeDecode(m []byte) (*message.Trade, error) {
 	}
 
 	mesg := &message.Trade{
-		Origin:    exchange.Binance,
-		Pair:      *pair,
-		Value:	   message.TradeValue{
+		Origin: exchange.Binance,
+		Pair:   *pair,
+		Value: message.TradeValue{
 			Sell:      !e.IsBuyerMarket,
 			Timestamp: time.Unix(e.TradeOrderTime/1000, (e.TradeOrderTime%1000)*1000000),
 			Price:     e.Price,
-			Qty: 	   e.Qty,
+			Qty:       e.Qty,
 		},
 	}
 
@@ -55,22 +55,22 @@ func TradeDecode(m []byte) (*message.Trade, error) {
 }
 
 type AggTrade struct {
-	Price          float32 `json:"p,string"`
-	Qty            float32 `json:"q,string"`
-	Timestamp      int64   `json:"T"`
-	IsBuyerMarket  bool   `json:"m"`
+	Price         float32 `json:"p,string"`
+	Qty           float32 `json:"q,string"`
+	Timestamp     int64   `json:"T"`
+	IsBuyerMarket bool    `json:"m"`
 }
 
 type AggTrades []AggTrade
 
 func (a AggTrades) ToValues() []message.TradeValue {
-	r := make([]message.TradeValue,len(a))
-	for i,v := range a {
+	r := make([]message.TradeValue, len(a))
+	for i, v := range a {
 		r[i] = message.TradeValue{
 			v.Price,
 			v.Qty,
 			!v.IsBuyerMarket,
-			time.Unix(v.Timestamp/1000, (v.Timestamp%1000)*1000000) }
+			time.Unix(v.Timestamp/1000, (v.Timestamp%1000)*1000000)}
 	}
 	return r
 }

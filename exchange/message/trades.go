@@ -13,13 +13,13 @@ type TradeValue struct {
 }
 
 type Trade struct {
-	Origin    exchange.Exchange
-	Pair      exchange.CoinPair
-	Value     TradeValue
+	Origin exchange.Exchange
+	Pair   exchange.CoinPair
+	Value  TradeValue
 }
 
 type Trades struct {
-	Origin    exchange.Exchange
-	Pair      exchange.CoinPair
-	Values    []TradeValue
+	Origin exchange.Exchange
+	Pair   exchange.CoinPair
+	Values []TradeValue
 }

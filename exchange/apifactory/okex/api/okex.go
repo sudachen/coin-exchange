@@ -108,4 +108,3 @@ func (a *api) UnsubscribeAll(timeout time.Duration, wg *sync.WaitGroup) {
 func (a *api) Queries(pair exchange.CoinPair) (message.QueryApi, error) {
 	return nil, &exchange.UnsupportedPair{exchange.Okex, pair}
 }
-

@@ -44,9 +44,9 @@ func TradeDecode(m []byte) ([]*message.Trade, error) {
 		}
 
 		mesg := &message.Trade{
-			Origin:    exchange.Huobi,
-			Pair:      *pair,
-			Value:     message.TradeValue{
+			Origin: exchange.Huobi,
+			Pair:   *pair,
+			Value: message.TradeValue{
 				Sell:      e.Direction == "sell",
 				Timestamp: time.Unix(e.Ts/1000, (e.Ts%1000)*1000000),
 				Price:     e.Price,

@@ -43,4 +43,3 @@ func UnsubscribeAll(timeout time.Duration, wg *sync.WaitGroup) {
 		wgg.Wait()
 	}
 }
-
