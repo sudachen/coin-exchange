@@ -5,10 +5,7 @@ import (
 	"time"
 )
 
-type Candlestick struct {
-	Origin exchange.Exchange
-	Pair   exchange.CoinPair
-
+type Kline struct {
 	Timestamp time.Time
 	Interval  int32
 	TradeNum  int32
@@ -18,4 +15,18 @@ type Candlestick struct {
 	High   float32
 	Low    float32
 	Volume float32
+}
+
+type Candlestick struct {
+	Origin exchange.Exchange
+	Pair   exchange.CoinPair
+
+	Kline
+}
+
+type Candlesticks struct {
+	Origin exchange.Exchange
+	Pair   exchange.CoinPair
+
+	Klines []Kline
 }

@@ -20,8 +20,8 @@ type DepthCombined struct {
 	Data   []Depth `json:"data"`
 }
 
-func DepthDecode(m []byte) ([]*message.Depth, error) {
-	var r []*message.Depth
+func DepthDecode(m []byte) ([]*message.Orders, error) {
+	var r []*message.Orders
 	c := DepthCombined{}
 
 	if err := json.Unmarshal(m, &c); err != nil {
@@ -38,20 +38,13 @@ func DepthDecode(m []byte) ([]*message.Depth, error) {
 
 		theTime, _ := time.Parse(tmLayout, e.Timestamp)
 
-		mesg := &message.Depth{
+		mesg := &message.Orders{
 			Origin:    exchange.Okex,
 			Pair:      *pair,
 			Timestamp: theTime,
 			Bids:      message.MakeDepthValues(e.Bids),
 			Asks:      message.MakeDepthValues(e.Asks),
 		}
-
-		//bdp := message.MakeDepthValues(e.Bids)
-		//mesg.AggBids = message.CalcDepthAgg(bdp)
-		//mesg.Bids = bdp
-		//adp := message.MakeDepthValues(e.Asks)
-		//mesg.AggAsks = message.CalcDepthAgg(adp)
-		//mesg.Asks = adp
 
 		r = append(r, mesg)
 	}

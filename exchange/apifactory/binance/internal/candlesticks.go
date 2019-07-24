@@ -60,8 +60,10 @@ func CandlestickDecode(m []byte) (*message.Candlestick, error) {
 	mesg := &message.Candlestick{
 		Origin:    exchange.Binance,
 		Pair:      *pair,
-		Timestamp: time.Unix(e.Kline.EndTime/1000, (e.Kline.EndTime%1000)*1000000),
-		TradeNum:  e.Kline.TradeNum,
+		Kline: 	   message.Kline{
+			Timestamp: time.Unix(e.Kline.EndTime/1000, (e.Kline.EndTime%1000)*1000000),
+			TradeNum:  e.Kline.TradeNum,
+		},
 	}
 
 	cv := func(s string) float32 {
@@ -72,13 +74,13 @@ func CandlestickDecode(m []byte) (*message.Candlestick, error) {
 		}
 	}
 
-	mesg.Open = cv(e.Kline.Open)
-	mesg.Close = cv(e.Kline.Close)
-	mesg.High = cv(e.Kline.High)
-	mesg.Low = cv(e.Kline.Low)
-	mesg.Volume = cv(e.Kline.Volume)
+	mesg.Kline.Open = cv(e.Kline.Open)
+	mesg.Kline.Close = cv(e.Kline.Close)
+	mesg.Kline.High = cv(e.Kline.High)
+	mesg.Kline.Low = cv(e.Kline.Low)
+	mesg.Kline.Volume = cv(e.Kline.Volume)
 
-	mesg.Interval = 1 //min
+	mesg.Kline.Interval = 1 //min
 
 	return mesg, nil
 }

@@ -4,12 +4,14 @@ import (
 	"github.com/google/logger"
 	"github.com/sudachen/coin-exchange/exchange"
 	"github.com/sudachen/coin-exchange/exchange/apifactory/huobi/internal"
+	"github.com/sudachen/coin-exchange/exchange/channel"
+	"github.com/sudachen/coin-exchange/exchange/message"
 	"github.com/sudachen/coin-exchange/exchange/ws"
 	"sync"
 	"time"
 )
 
-func New() exchange.Api {
+func New() message.Api {
 	return &api{
 		make(map[subsid]bool),
 		nil,
@@ -33,7 +35,7 @@ func (a *api) Unlock() {
 	a.mux.L.Unlock()
 }
 
-func (a *api) Subscribe(pairs []exchange.CoinPair, channels []exchange.Channel) error {
+func (a *api) Subscribe(pairs []exchange.CoinPair, channels ...channel.Channel) error {
 	a.Lock()
 	pairs = a.FilterSupported(pairs)
 	for _, c := range channels {
@@ -101,4 +103,8 @@ func (a *api) UnsubscribeAll(timeout time.Duration, wg *sync.WaitGroup) {
 	if wg == nil {
 		wwg.Wait()
 	}
+}
+
+func (a *api) Queries(pair exchange.CoinPair) (message.QueryApi, error) {
+	return nil, &exchange.UnsupportedPair{ exchange.Huobi, pair}
 }

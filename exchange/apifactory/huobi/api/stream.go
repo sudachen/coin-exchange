@@ -6,13 +6,14 @@ import (
 	"github.com/google/logger"
 	"github.com/sudachen/coin-exchange/exchange"
 	"github.com/sudachen/coin-exchange/exchange/apifactory/huobi/internal"
+	"github.com/sudachen/coin-exchange/exchange/channel"
 	"github.com/sudachen/coin-exchange/exchange/ws"
 	"strings"
 	"time"
 )
 
 type subsid struct {
-	channel exchange.Channel
+	channel channel.Channel
 	pair    exchange.CoinPair
 }
 
@@ -25,7 +26,7 @@ type query struct {
 	Id  string `json:"id"`
 }
 
-var channels = []exchange.Channel{exchange.Candlestick, exchange.Trade, exchange.Depth}
+var channels = []channel.Channel{channel.Candlestick, channel.Trade, channel.Depth}
 var idCounter = 0
 
 func (a *api) subscribeAll() {
@@ -34,11 +35,11 @@ func (a *api) subscribeAll() {
 			var cs []string
 			var sfx string
 			switch c {
-			case exchange.Candlestick:
+			case channel.Candlestick:
 				sfx = ".kline.1min"
-			case exchange.Trade:
+			case channel.Trade:
 				sfx = ".trade.detail"
-			case exchange.Depth:
+			case channel.Depth:
 				sfx = ".depth.step2"
 			}
 			a.Lock()
@@ -95,7 +96,7 @@ func (a *api) isConnected() bool {
 
 func (a *api) OnMessage(m []byte) bool {
 	switch getChannel(m) {
-	case exchange.Candlestick:
+	case channel.Candlestick:
 		if msg, err := internal.CandlestickDecode(m); err != nil {
 			logger.Error(err.Error())
 			return false
@@ -105,7 +106,7 @@ func (a *api) OnMessage(m []byte) bool {
 			}
 			return true
 		}
-	case exchange.Trade:
+	case channel.Trade:
 		if msg, err := internal.TradeDecode(m); err != nil {
 			logger.Error(err.Error())
 			return false
@@ -115,7 +116,7 @@ func (a *api) OnMessage(m []byte) bool {
 			}
 			return true
 		}
-	case exchange.Depth:
+	case channel.Depth:
 		if msg, err := internal.DepthDecode(m); err != nil {
 			logger.Error(err.Error())
 			return false
@@ -158,22 +159,22 @@ func (a *api) Close() error {
 	}
 }
 
-func getChannel(m []byte) exchange.Channel {
+func getChannel(m []byte) channel.Channel {
 	if len(m) > 80 {
 		m = m[:80]
 	}
 	s := string(m)
 	if strings.Index(s, "\"status\":\"") > 0 {
-		return exchange.NoChannel
+		return channel.NoChannel
 	}
 	if strings.Index(s, ".kline.1min\"") > 0 {
-		return exchange.Candlestick
+		return channel.Candlestick
 	} else if strings.Index(s, ".trade.detail\"") > 0 {
-		return exchange.Trade
+		return channel.Trade
 	} else if strings.Index(s, ".depth.") > 0 {
-		return exchange.Depth
+		return channel.Depth
 	} else {
-		return exchange.NoChannel
+		return channel.NoChannel
 	}
 }
 
@@ -181,7 +182,7 @@ const maxPairsCountInString = 3
 
 func (a *api) String() string {
 	a.Lock()
-	cls := make(map[exchange.Channel][]string)
+	cls := make(map[channel.Channel][]string)
 	for k, _ := range a.subs {
 		ss1, ok := cls[k.channel]
 		if !ok {

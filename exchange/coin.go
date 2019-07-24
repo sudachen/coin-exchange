@@ -120,3 +120,12 @@ func PairFromString(s string) (CoinPair, error) {
 	}
 	return p, nil
 }
+
+type UnsupportedPair struct {
+	Exchange
+	CoinPair
+}
+
+func (e *UnsupportedPair) Error() string {
+	return fmt.Sprintf("UnsupportedPair{%v:%v}",e.Exchange.String(),e.CoinPair.String())
+}

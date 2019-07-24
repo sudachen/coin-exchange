@@ -38,7 +38,7 @@ type DepthCombined struct {
 	Data   *Depth `json:"data"`
 }
 
-func DepthDecode(m []byte) (*message.Depth, error) {
+func DepthDecode(m []byte) (*message.Orders, error) {
 	e := Depth{}
 	c := DepthCombined{Data: &e}
 	if err := json.Unmarshal(m, &c); err != nil {
@@ -51,7 +51,7 @@ func DepthDecode(m []byte) (*message.Depth, error) {
 		return nil, fmt.Errorf("unsupported symbol '%v' in Depth message", symbol)
 	}
 
-	mesg := &message.Depth{
+	mesg := &message.Orders{
 		Origin:    exchange.Binance,
 		Pair:      *pair,
 		Timestamp: time.Now(),
@@ -59,12 +59,8 @@ func DepthDecode(m []byte) (*message.Depth, error) {
 		Asks:      message.MakeDepthValues(e.Asks),
 	}
 
-	//bdp := message.MakeDepthValues(e.Bids)
-	//mesg.AggBids = message.CalcDepthAgg(bdp)
-	//mesg.Bids = bdp
-	//adp := message.MakeDepthValues(e.Asks)
-	//mesg.AggAsks = message.CalcDepthAgg(adp)
-	//mesg.Asks = adp
-
 	return mesg, nil
 }
+
+
+

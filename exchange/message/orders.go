@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-type DepthValue struct {
+type OrderValue struct {
 	Price float32
 	Qty   float32
 }
@@ -18,18 +18,18 @@ type DepthAgg struct {
 	Volume float32
 }
 
-type Depth struct {
+type Orders struct {
 	Origin exchange.Exchange
 	Pair   exchange.CoinPair
-	Bids   []DepthValue
-	Asks   []DepthValue
+	Bids   []OrderValue
+	Asks   []OrderValue
 	//AggBids   DepthAgg
 	//AggAsks   DepthAgg
 	Timestamp time.Time
 }
 
-func MakeDepthValues(a [][]string) []DepthValue {
-	r := make([]DepthValue, len(a))
+func MakeDepthValues(a [][]string) []OrderValue {
+	r := make([]OrderValue, len(a))
 
 	cv := func(s string) float32 {
 		if f, err := strconv.ParseFloat(s, 32); err != nil {
@@ -40,13 +40,13 @@ func MakeDepthValues(a [][]string) []DepthValue {
 	}
 
 	for i, v := range a {
-		r[i] = DepthValue{cv(v[0]), cv(v[1])}
+		r[i] = OrderValue{cv(v[0]), cv(v[1])}
 	}
 
 	return r
 }
 
-func CalcDepthAgg(dp []DepthValue) DepthAgg {
+func CalcDepthAgg(dp []OrderValue) DepthAgg {
 	agg := DepthAgg{}
 	for _, v := range dp {
 		agg.Volume += v.Price * v.Qty

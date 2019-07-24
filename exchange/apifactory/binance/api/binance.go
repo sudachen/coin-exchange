@@ -5,6 +5,8 @@ import (
 	"github.com/google/logger"
 	"github.com/sudachen/coin-exchange/exchange"
 	"github.com/sudachen/coin-exchange/exchange/apifactory/binance/internal"
+	"github.com/sudachen/coin-exchange/exchange/channel"
+	"github.com/sudachen/coin-exchange/exchange/message"
 	"github.com/sudachen/coin-exchange/exchange/ws"
 	"strings"
 	"sync"
@@ -14,11 +16,17 @@ import (
 const combinedBaseURL = "wss://stream.binance.com:9443/stream?streams="
 const maxEndpointLength = 1000
 
-func New() exchange.Api {
-	return &api{
+func New() message.Api {
+	 a := &api{
 		make(map[subsid]*stream),
 		nil,
-	}
+		make(map[exchange.CoinPair]bool),
+		sync.Mutex{},
+	 }
+	 for i, _ := range internal.Excluded {
+	 	a.exclude[i] = true
+	 }
+	 return a
 }
 
 const maxPairsCountInString = 3
@@ -33,8 +41,8 @@ func (st *stream) String() string {
 		}
 	}
 	var ss2 []string
-	for _, v := range st.channels {
-		ss2 = append(ss2, v.String())
+	for _, ch := range st.channels {
+		ss2 = append(ss2, ch.String())
 	}
 	return "St{Binance|" + strings.Join(ss1, ",") + "|" + strings.Join(ss2, ",") + "}"
 }
@@ -42,33 +50,35 @@ func (st *stream) String() string {
 type api struct {
 	subs map[subsid]*stream
 	sts  []*stream
+	exclude map[exchange.CoinPair]bool
+	m	 sync.Mutex
 }
 
 func (a *api) subscribe(st *stream) {
-	for _, channel := range st.channels {
+	for _, ch := range st.channels {
 		for _, pair := range st.pairs {
-			a.subs[subsid{channel, pair}] = st
+			a.subs[subsid{ch, pair}] = st
 		}
 	}
 	a.sts = append(a.sts, st)
 	ws.Connect(st)
 }
 
-func (a *api) Subscribe(pairs []exchange.CoinPair, channels []exchange.Channel) error {
+func (a *api) Subscribe(pairs []exchange.CoinPair, channels ...channel.Channel) error {
 	channels = append(channels[:0:0], channels...)
 	st := &stream{endpoint: combinedBaseURL, channels: channels, mux: &sync.Mutex{}}
 	var sts []*stream
 
 	for _, pair := range a.FilterSupported(pairs) {
 		var ep string
-		for _, channel := range channels {
-			if _, exists := a.subs[subsid{channel, pair}]; !exists {
-				switch channel {
-				case exchange.Candlestick:
+		for _, ch := range channels {
+			if _, exists := a.subs[subsid{ch, pair}]; !exists {
+				switch ch {
+				case channel.Candlestick:
 					ep += fmt.Sprintf("%s@kline_%s/", internal.MakeSymbol(pair), "1m")
-				case exchange.Trade:
+				case channel.Trade:
 					ep += fmt.Sprintf("%s@trade/", internal.MakeSymbol(pair))
-				case exchange.Depth:
+				case channel.Depth:
 					ep += fmt.Sprintf("%s%s/", internal.MakeSymbol(pair), internal.DepthSuffix)
 				default:
 					panic("unreachable")
@@ -93,6 +103,9 @@ func (a *api) Subscribe(pairs []exchange.CoinPair, channels []exchange.Channel) 
 }
 
 func (a *api) IsSupported(pair exchange.CoinPair) bool {
+	if internal.Excluded[pair] {
+		return false
+	}
 	for _, i := range pair {
 		if _, ok := internal.Coins[i]; !ok {
 			return false

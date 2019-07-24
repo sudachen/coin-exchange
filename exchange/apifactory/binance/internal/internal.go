@@ -21,6 +21,7 @@ var Coins = map[exchange.CoinType]bool{
 }
 
 var Pairs = make(map[string]exchange.CoinPair)
+var Excluded = make(map[exchange.CoinPair]bool)
 
 func init() {
 	for c1, _ := range Coins {
@@ -31,6 +32,8 @@ func init() {
 			}
 		}
 	}
+	Excluded[exchange.CoinPair{exchange.BTC,exchange.ETH}] = true
+	Excluded[exchange.CoinPair{exchange.BCH,exchange.ETH}] = true
 }
 
 func MakeSymbol(pair exchange.CoinPair) string {

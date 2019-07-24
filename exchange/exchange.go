@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"gopkg.in/yaml.v3"
 	"strings"
-	"sync"
-	"time"
 )
 
 type Exchange byte
@@ -42,13 +40,6 @@ func ExchangeFromString(s string) (Exchange, error) {
 	}
 }
 
-type Api interface {
-	Subscribe(pairs []CoinPair, channels []Channel) error
-	IsSupported(pair CoinPair) bool
-	FilterSupported(pairs []CoinPair) []CoinPair
-	UnsubscribeAll(duration time.Duration, wg *sync.WaitGroup /*can be nil*/)
-}
-
 func (e *Exchange) UnmarshalYAML(value *yaml.Node) error {
 	if value.Tag != "!!str" {
 		return fmt.Errorf("can't decode exchange")
@@ -61,12 +52,4 @@ func (e *Exchange) UnmarshalYAML(value *yaml.Node) error {
 	}
 
 	return nil
-}
-
-type UnsupportedError struct {
-	Message string
-}
-
-func (e *UnsupportedError) Error() string {
-	return e.Message
 }

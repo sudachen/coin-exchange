@@ -41,14 +41,16 @@ func CandlestickDecode(m []byte) ([]*message.Candlestick, error) {
 	mesg := &message.Candlestick{
 		Origin:    exchange.Huobi,
 		Pair:      *pair,
-		Timestamp: time.Unix(c.Ts/1000, (c.Ts%1000)*1000000),
-		TradeNum:  c.Data.Count,
-		Open:      c.Data.Open,
-		Close:     c.Data.Close,
-		High:      c.Data.High,
-		Low:       c.Data.Low,
-		Volume:    c.Data.Vol,
-		Interval:  1,
+		Kline:	   message.Kline{
+			Timestamp: time.Unix(c.Ts/1000, (c.Ts%1000)*1000000),
+			TradeNum:  c.Data.Count,
+			Open:      c.Data.Open,
+			Close:     c.Data.Close,
+			High:      c.Data.High,
+			Low:       c.Data.Low,
+			Volume:    c.Data.Vol,
+			Interval:  1,
+		},
 	}
 
 	return []*message.Candlestick{mesg}, nil

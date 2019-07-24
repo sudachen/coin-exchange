@@ -4,19 +4,20 @@ import (
 	"github.com/google/logger"
 	"github.com/sudachen/coin-exchange/exchange"
 	"github.com/sudachen/coin-exchange/exchange/apifactory/binance/internal"
+	"github.com/sudachen/coin-exchange/exchange/channel"
 	"github.com/sudachen/coin-exchange/exchange/ws"
 	"strings"
 	"sync"
 )
 
 type subsid struct {
-	channel exchange.Channel
+	channel channel.Channel
 	pair    exchange.CoinPair
 }
 
 type stream struct {
 	endpoint string
-	channels []exchange.Channel
+	channels []channel.Channel
 	pairs    []exchange.CoinPair
 	// async mutable part
 	ws  *ws.Websocket
@@ -49,7 +50,7 @@ func (st *stream) isConnected() bool {
 
 func (st *stream) OnMessage(m []byte) bool {
 	switch getChannel(m) {
-	case exchange.Candlestick:
+	case channel.Candlestick:
 		if msg, err := internal.CandlestickDecode(m); err != nil {
 			logger.Error(err.Error())
 			return false
@@ -57,7 +58,7 @@ func (st *stream) OnMessage(m []byte) bool {
 			exchange.Collector.Messages <- msg
 			return true
 		}
-	case exchange.Trade:
+	case channel.Trade:
 		if msg, err := internal.TradeDecode(m); err != nil {
 			logger.Error(err.Error())
 			return false
@@ -65,7 +66,7 @@ func (st *stream) OnMessage(m []byte) bool {
 			exchange.Collector.Messages <- msg
 			return true
 		}
-	case exchange.Depth:
+	case channel.Depth:
 		if msg, err := internal.DepthDecode(m); err != nil {
 			logger.Error(err.Error())
 			return false
@@ -94,19 +95,19 @@ func (st *stream) Close() error {
 	}
 }
 
-func getChannel(m []byte) exchange.Channel {
+func getChannel(m []byte) channel.Channel {
 	if len(m) > 80 {
 		m = m[:80]
 	}
 	s := string(m)
 	//fmt.Println(s,internal.DepthSuffix)
 	if strings.Index(s, "@kline_1m\"") > 0 {
-		return exchange.Candlestick
+		return channel.Candlestick
 	} else if strings.Index(s, "@trade\"") > 0 {
-		return exchange.Trade
+		return channel.Trade
 	} else if strings.Index(s, internal.DepthSuffix) > 0 {
-		return exchange.Depth
+		return channel.Depth
 	} else {
-		return exchange.NoChannel
+		return channel.NoChannel
 	}
 }

@@ -6,13 +6,14 @@ import (
 	binance "github.com/sudachen/coin-exchange/exchange/apifactory/binance/api"
 	huobi "github.com/sudachen/coin-exchange/exchange/apifactory/huobi/api"
 	okex "github.com/sudachen/coin-exchange/exchange/apifactory/okex/api"
+	"github.com/sudachen/coin-exchange/exchange/message"
 	"sync"
 	"time"
 )
 
-var apis = make(map[exchange.Exchange]exchange.Api)
+var apis = make(map[exchange.Exchange]message.Api)
 
-func Get(ex exchange.Exchange) exchange.Api {
+func Get(ex exchange.Exchange) message.Api {
 	api, ok := apis[ex]
 	if !ok {
 		switch ex {
@@ -30,10 +31,16 @@ func Get(ex exchange.Exchange) exchange.Api {
 	return api
 }
 
-func UnsubscribeAll(timeout time.Duration) {
-	wg := sync.WaitGroup{}
-	for _, api := range apis {
-		api.UnsubscribeAll(timeout, &wg)
+func UnsubscribeAll(timeout time.Duration, wg *sync.WaitGroup) {
+	wgg := wg
+	if wgg == nil {
+		wgg = &sync.WaitGroup{}
 	}
-	wg.Wait()
+	for _, api := range apis {
+		api.UnsubscribeAll(timeout, wgg)
+	}
+	if wg == nil {
+		wgg.Wait()
+	}
 }
+

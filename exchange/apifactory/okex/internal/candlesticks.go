@@ -47,17 +47,19 @@ func CandlestickDecode(m []byte) ([]*message.Candlestick, error) {
 		mesg := &message.Candlestick{
 			Origin:    exchange.Okex,
 			Pair:      *pair,
-			Timestamp: theTime,
-			TradeNum:  0,
+			Kline:     message.Kline{
+				Timestamp: theTime,
+				TradeNum:  0,
+			},
 		}
 
-		mesg.Open = cv(e.Kline[1])
-		mesg.Close = cv(e.Kline[4])
-		mesg.High = cv(e.Kline[2])
-		mesg.Low = cv(e.Kline[3])
-		mesg.Volume = cv(e.Kline[5])
+		mesg.Kline.Open = cv(e.Kline[1])
+		mesg.Kline.Close = cv(e.Kline[4])
+		mesg.Kline.High = cv(e.Kline[2])
+		mesg.Kline.Low = cv(e.Kline[3])
+		mesg.Kline.Volume = cv(e.Kline[5])
 
-		mesg.Interval = 1 //min
+		mesg.Kline.Interval = 1 //min
 		r = append(r, mesg)
 	}
 
