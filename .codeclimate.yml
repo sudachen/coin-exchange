@@ -7,7 +7,7 @@ checks:
   complex-logic:
     enabled: true
     config:
-      threshold: 4
+      threshold: 60
   file-lines:
     enabled: true
     config:
@@ -29,9 +29,9 @@ checks:
     config:
       threshold: 8
   return-statements:
-    enabled: true
-    config:
-      threshold: 4
+    enabled: false
+    #config:
+    #  threshold: 4
   similar-code:
     enabled: false
     #config:
