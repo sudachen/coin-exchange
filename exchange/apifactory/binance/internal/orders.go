@@ -51,6 +51,8 @@ func DepthDecode(m []byte) (*message.Orders, error) {
 		return nil, fmt.Errorf("unsupported symbol '%v' in Depth message", symbol)
 	}
 
+	//logger.Infof("Binance depth length: %v, %v", len(e.Bids), len(e.Asks))
+
 	mesg := &message.Orders{
 		Origin:    exchange.Binance,
 		Pair:      *pair,

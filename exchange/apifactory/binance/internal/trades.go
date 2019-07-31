@@ -54,6 +54,11 @@ func TradeDecode(m []byte) (*message.Trade, error) {
 	return mesg, nil
 }
 
+
+type TradesToValues interface {
+	ToValues() []message.TradeValue
+}
+
 type AggTrade struct {
 	Price         float32 `json:"p,string"`
 	Qty           float32 `json:"q,string"`
@@ -74,3 +79,29 @@ func (a AggTrades) ToValues() []message.TradeValue {
 	}
 	return r
 }
+
+type HistTrades []HistTrade
+type HistTrade struct {
+	Price float32 `json:"price,string"`
+	Qty   float32 `json:"qty,string"`
+	Time  int64   `json:"time"`
+	IsBuyerMarket bool `json:"isBuyerMaker"`
+}
+
+func (q HistTrades) ToValues() []message.TradeValue {
+	r := make([]message.TradeValue, len(q))
+	for i, v := range q {
+		r[i] = message.TradeValue{
+			v.Price,
+			v.Qty,
+			!v.IsBuyerMarket,
+			v.Timestamp(),
+		}
+	}
+	return r
+}
+
+func (q *HistTrade) Timestamp() time.Time {
+	return time.Unix(q.Time/1000, (q.Time%1000)*1000000)
+}
+

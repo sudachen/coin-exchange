@@ -39,6 +39,8 @@ func DepthDecode(m []byte) ([]*message.Orders, error) {
 		//Bids:
 	}
 
+	//logger.Infof("Huobi depth length: %v, %v", len(c.Tk.Bids), len(c.Tk.Asks))
+
 	bdp := make([]message.OrderValue, len(c.Tk.Bids))
 	for i, v := range c.Tk.Bids {
 		bdp[i] = message.OrderValue{v[0], v[1]}

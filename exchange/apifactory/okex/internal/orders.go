@@ -38,6 +38,8 @@ func DepthDecode(m []byte) ([]*message.Orders, error) {
 
 		theTime, _ := time.Parse(tmLayout, e.Timestamp)
 
+		//logger.Infof("Okex depth length: %v, %v", len(e.Bids), len(e.Asks))
+
 		mesg := &message.Orders{
 			Origin:    exchange.Okex,
 			Pair:      *pair,

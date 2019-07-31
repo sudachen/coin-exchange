@@ -40,7 +40,7 @@ func (a *api) subscribeAll() {
 			case channel.Trade:
 				sfx = ".trade.detail"
 			case channel.Depth:
-				sfx = ".depth.step2"
+				sfx = ".depth.step1"
 			}
 			a.Lock()
 			for k, ready := range a.subs {

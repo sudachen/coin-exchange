@@ -42,8 +42,16 @@ func (a *api) Queries(pair exchange.CoinPair) (message.QueryApi, error) {
 	}
 }
 
-func (q *queries) QueryDepth(count int32) (*message.Orders, error) {
+func (q *queries) QueryDepth(l message.Limit) (*message.Orders, error) {
 	var depth internal.Depth
+	var count int
+	switch l {
+	case message.LimitMin: count = 5
+	case message.LimitLow: count = 20
+	case message.LimitNorm: count = 100
+	case message.LimitHigh: count = 500
+	case message.LimitMax: count = 1000
+	}
 	if err := q.query("depth", count, "", &depth); err != nil {
 		return nil, err
 	} else {
@@ -57,23 +65,54 @@ func (q *queries) QueryDepth(count int32) (*message.Orders, error) {
 	}
 }
 
-func (q *queries) QueryTrades(count int32) (*message.Trades, error) {
-	var trades internal.AggTrades
-	if err := q.query("aggTrades", count, "", &trades); err != nil {
-		return nil, err
-	} else {
-		return &message.Trades{
-			Origin: exchange.Binance,
-			Pair:   q.Pair,
-			Values: trades.ToValues(),
-		}, nil
-	}
+func (q *queries) QueryTrades(l message.Limit) (*message.Trades, error) {
+	return q.queryTrades(l, false)
 }
 
-func (q *queries) QueryCandlesticks(interval int32, count int32) (*message.Candlesticks, error) {
+func (q *queries) QueryAggTrades(l message.Limit) (*message.Trades, error) {
+	return q.queryTrades(l, true)
+}
+
+func (q *queries) queryTrades(l message.Limit, agg bool) (*message.Trades, error) {
+	var count int
+	switch l {
+	case message.LimitMin: count = 5
+	case message.LimitLow: count = 20
+	case message.LimitNorm: count = 100
+	case message.LimitHigh: count = 500
+	case message.LimitMax: count = 1000
+	}
+
+	var val []message.TradeValue
+
+	if agg {
+		t := internal.AggTrades{}
+		if err := q.query("aggTrades", count, "", &t); err != nil {
+			return nil, err
+		}
+		val = t.ToValues()
+	} else {
+		t := internal.HistTrades{}
+		if err := q.query("trades", count, "", &t); err != nil {
+			return nil, err
+		}
+		val = t.ToValues()
+	}
+
+	return &message.Trades{
+		Origin: exchange.Binance,
+		Pair:   q.Pair,
+		Values: val,
+	}, nil
+}
+
+func (q *queries) QueryCandlesticks(interval int, count int) (*message.Candlesticks, error) {
 	var i string
 	var minutes int32
-	if interval >= 60 {
+	if interval >= 60*24 {
+		i = "1d"
+		minutes = 60*24
+	} else if interval >= 60 {
 		i = "1h"
 		minutes = 60
 	} else if interval >= 30 {
@@ -106,7 +145,7 @@ func (q *queries) QueryCandlesticks(interval int32, count int32) (*message.Candl
 	}
 }
 
-func (q *queries) query(api string, limit int32, interval string, result interface{}) error {
+func (q *queries) query(api string, limit int, interval string, result interface{}) error {
 	symbol := strings.ToUpper(internal.MakeSymbol(q.Pair))
 	url := apiUrl + api + "?symbol=" + symbol
 	if limit > 0 {
@@ -196,3 +235,4 @@ type apiError struct {
 func (e *apiError) Error() string {
 	return fmt.Sprintf("apiError{%v|%v on %v:%v}", e.Code, e.Message, e.Origin.String(), e.Pair.String())
 }
+

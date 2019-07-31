@@ -15,8 +15,19 @@ type Api interface {
 	Queries(exchange.CoinPair) (QueryApi, error)
 }
 
+type Limit int
+
+const (
+	LimitMin Limit = iota
+	LimitLow
+	LimitNorm
+	LimitHigh
+	LimitMax
+)
+
 type QueryApi interface {
-	QueryDepth(count int32) (*Orders, error)
-	QueryTrades(count int32) (*Trades, error)
-	QueryCandlesticks(interval int32, count int32) (*Candlesticks, error)
+	QueryDepth(Limit) (*Orders, error)
+	QueryTrades(Limit) (*Trades, error)
+	QueryAggTrades(Limit) (*Trades, error)
+	QueryCandlesticks(interval int, count int) (*Candlesticks, error)
 }

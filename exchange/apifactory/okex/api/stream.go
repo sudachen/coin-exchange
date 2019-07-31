@@ -154,7 +154,7 @@ func getChannel(m []byte) channel.Channel {
 		return channel.Candlestick
 	} else if strings.Index(s, "\"spot/trade\"") > 0 {
 		return channel.Trade
-	} else if strings.Index(s, "\"spot/depth5\"") > 0 {
+	} else if strings.Index(s, "\"spot/depth") > 0 {
 		return channel.Depth
 	} else {
 		return channel.NoChannel
@@ -169,7 +169,7 @@ func (a *api) String() string {
 	for k, _ := range a.subs {
 		ss1, ok := cls[k.channel]
 		if !ok {
-			ss1 = make([]string, 0, 3)
+			ss1 = make([]string, 0, maxPairsCountInString + 1)
 		}
 		if len(ss1) < maxPairsCountInString {
 			ss1 = append(ss1, k.pair.String())
