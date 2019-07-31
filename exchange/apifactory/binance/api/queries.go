@@ -46,11 +46,16 @@ func (q *queries) QueryDepth(l message.Limit) (*message.Orders, error) {
 	var depth internal.Depth
 	var count int
 	switch l {
-	case message.LimitMin: count = 5
-	case message.LimitLow: count = 20
-	case message.LimitNorm: count = 100
-	case message.LimitHigh: count = 500
-	case message.LimitMax: count = 1000
+	case message.LimitMin:
+		count = 5
+	case message.LimitLow:
+		count = 20
+	case message.LimitNorm:
+		count = 100
+	case message.LimitHigh:
+		count = 500
+	case message.LimitMax:
+		count = 1000
 	}
 	if err := q.query("depth", count, "", &depth); err != nil {
 		return nil, err
@@ -76,11 +81,16 @@ func (q *queries) QueryAggTrades(l message.Limit) (*message.Trades, error) {
 func (q *queries) queryTrades(l message.Limit, agg bool) (*message.Trades, error) {
 	var count int
 	switch l {
-	case message.LimitMin: count = 5
-	case message.LimitLow: count = 20
-	case message.LimitNorm: count = 100
-	case message.LimitHigh: count = 500
-	case message.LimitMax: count = 1000
+	case message.LimitMin:
+		count = 5
+	case message.LimitLow:
+		count = 20
+	case message.LimitNorm:
+		count = 100
+	case message.LimitHigh:
+		count = 500
+	case message.LimitMax:
+		count = 1000
 	}
 
 	var val []message.TradeValue
@@ -111,7 +121,7 @@ func (q *queries) QueryCandlesticks(interval int, count int) (*message.Candlesti
 	var minutes int32
 	if interval >= 60*24 {
 		i = "1d"
-		minutes = 60*24
+		minutes = 60 * 24
 	} else if interval >= 60 {
 		i = "1h"
 		minutes = 60
@@ -235,4 +245,3 @@ type apiError struct {
 func (e *apiError) Error() string {
 	return fmt.Sprintf("apiError{%v|%v on %v:%v}", e.Code, e.Message, e.Origin.String(), e.Pair.String())
 }
-

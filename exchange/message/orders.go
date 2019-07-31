@@ -13,9 +13,9 @@ type OrderValue struct {
 
 type DepthAgg struct {
 	NormCenter float32
-	Center float32
-	Volume float32
-	Value  float32
+	Center     float32
+	Volume     float32
+	Value      float32
 }
 
 type Orders struct {
@@ -48,11 +48,11 @@ func MakeDepthValues(a [][]string) []OrderValue {
 
 func CalcDepthAgg(asks []OrderValue, bids []OrderValue) (aAgg DepthAgg, bAgg DepthAgg) {
 	agg := [2]DepthAgg{}
-	ord := [][]OrderValue{asks,bids}
+	ord := [][]OrderValue{asks, bids}
 	qtys := [2]float32{}
 
-	for i:=0; i<2; i++ {
-		for _,v := range ord[i] {
+	for i := 0; i < 2; i++ {
+		for _, v := range ord[i] {
 			qtys[i] += v.Qty
 			agg[i].Value += v.Qty * v.Price
 		}
@@ -63,9 +63,9 @@ func CalcDepthAgg(asks []OrderValue, bids []OrderValue) (aAgg DepthAgg, bAgg Dep
 		Qty = qtys[1]
 	}
 
-	for i:=0; i<2; i++ {
-		agg[i].NormCenter = center2(total2(Qty,ord[i]),ord[i])/Qty
-		agg[i].Center = center2(total2(qtys[i],ord[i]),ord[i])/qtys[i]
+	for i := 0; i < 2; i++ {
+		agg[i].NormCenter = center2(total2(Qty, ord[i]), ord[i]) / Qty
+		agg[i].Center = center2(total2(qtys[i], ord[i]), ord[i]) / qtys[i]
 		agg[i].Volume = qtys[i]
 	}
 
@@ -74,11 +74,11 @@ func CalcDepthAgg(asks []OrderValue, bids []OrderValue) (aAgg DepthAgg, bAgg Dep
 	return agg[0], agg[1]
 }
 
-
 func total2(Qty float32, ord []OrderValue) float32 {
 	total := float32(0)
 	qty := float32(0)
-	loop1:for _, v := range ord {
+loop1:
+	for _, v := range ord {
 		if Qty >= qty+v.Qty {
 			total += v.Qty * v.Price
 			qty += v.Qty
@@ -89,20 +89,21 @@ func total2(Qty float32, ord []OrderValue) float32 {
 			break loop1
 		}
 	}
-	return total/2
+	return total / 2
 }
 
 func center2(total2 float32, ord []OrderValue) float32 {
 	qty := float32(0)
 	acc := float32(0)
-	loop1:for _,v := range ord {
+loop1:
+	for _, v := range ord {
 		if acc < total2 {
 			mas := v.Qty * v.Price
-			if acc + mas <= total2 {
+			if acc+mas <= total2 {
 				acc += mas
 				qty += v.Qty
 			} else {
-				qty += (total2 - acc)/v.Price
+				qty += (total2 - acc) / v.Price
 				break loop1
 			}
 		} else {
@@ -111,4 +112,3 @@ func center2(total2 float32, ord []OrderValue) float32 {
 	}
 	return qty
 }
-

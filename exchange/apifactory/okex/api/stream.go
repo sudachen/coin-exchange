@@ -169,7 +169,7 @@ func (a *api) String() string {
 	for k, _ := range a.subs {
 		ss1, ok := cls[k.channel]
 		if !ok {
-			ss1 = make([]string, 0, maxPairsCountInString + 1)
+			ss1 = make([]string, 0, maxPairsCountInString+1)
 		}
 		if len(ss1) < maxPairsCountInString {
 			ss1 = append(ss1, k.pair.String())
