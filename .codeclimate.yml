@@ -33,12 +33,23 @@ checks:
     config:
       threshold: 4
   similar-code:
-    enabled: true
-    config:
-      threshold: #language-specific defaults. overrides affect all languages.
+    enabled: false
+    #config:
+    #  threshold: #language-specific defaults. overrides affect all languages.
   identical-code:
+    enabled: false
+    #config:
+    #  threshold: #language-specific defaults. overrides affect all languages.
+
+plugins:
+  gofmt:
+    enabled: true
+  golint:
     enabled: true
     config:
-      threshold: #language-specific defaults. overrides affect all languages.
+      min_confidence: 0.9
+  govet:
+    enabled: true
 
-exclude_patterns:
+
+#exclude_patterns:
