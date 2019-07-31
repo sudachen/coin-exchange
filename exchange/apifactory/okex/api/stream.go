@@ -65,7 +65,7 @@ func (a *api) subscribeAll() {
 func (a *api) OnConnect(wes *ws.Websocket) (bool, error) {
 	a.Lock()
 	a.ws = wes
-	for k, _ := range a.subs {
+	for k := range a.subs {
 		a.subs[k] = false
 	}
 	go a.subscribeAll()
@@ -101,7 +101,6 @@ func (a *api) OnMessage(m []byte) bool {
 			for _, m := range msg {
 				exchange.Collector.Messages <- m
 			}
-			return true
 		}
 	case channel.Trade:
 		if msg, err := internal.TradeDecode(m); err != nil {
@@ -111,7 +110,6 @@ func (a *api) OnMessage(m []byte) bool {
 			for _, m := range msg {
 				exchange.Collector.Messages <- m
 			}
-			return true
 		}
 	case channel.Depth:
 		if msg, err := internal.DepthDecode(m); err != nil {
@@ -121,7 +119,6 @@ func (a *api) OnMessage(m []byte) bool {
 			for _, m := range msg {
 				exchange.Collector.Messages <- m
 			}
-			return true
 		}
 	}
 	return true
@@ -140,9 +137,8 @@ func (a *api) Close() error {
 	a.Unlock()
 	if wes != nil {
 		return wes.Close()
-	} else {
-		return nil
 	}
+	return nil
 }
 
 func getChannel(m []byte) channel.Channel {
@@ -166,7 +162,7 @@ const maxPairsCountInString = 3
 func (a *api) String() string {
 	a.Lock()
 	cls := make(map[channel.Channel][]string)
-	for k, _ := range a.subs {
+	for k := range a.subs {
 		ss1, ok := cls[k.channel]
 		if !ok {
 			ss1 = make([]string, 0, maxPairsCountInString+1)

@@ -32,11 +32,10 @@ func MakeDepthValues(a [][]string) []OrderValue {
 	r := make([]OrderValue, len(a))
 
 	cv := func(s string) float32 {
-		if f, err := strconv.ParseFloat(s, 32); err != nil {
-			return 0
-		} else {
+		if f, err := strconv.ParseFloat(s, 32); err == nil {
 			return float32(f)
 		}
+		return 0
 	}
 
 	for i, v := range a {

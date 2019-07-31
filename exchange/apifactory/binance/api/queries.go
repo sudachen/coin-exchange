@@ -37,9 +37,9 @@ func (a *api) Queries(pair exchange.CoinPair) (message.QueryApi, error) {
 				},
 			},
 		}, nil
-	} else {
-		return nil, &exchange.UnsupportedPair{exchange.Binance, pair}
 	}
+
+	return nil, &exchange.UnsupportedPair{exchange.Binance, pair}
 }
 
 func (q *queries) QueryDepth(l message.Limit) (*message.Orders, error) {
@@ -57,17 +57,18 @@ func (q *queries) QueryDepth(l message.Limit) (*message.Orders, error) {
 	case message.LimitMax:
 		count = 1000
 	}
+
 	if err := q.query("depth", count, "", &depth); err != nil {
 		return nil, err
-	} else {
-		return &message.Orders{
-			Origin:    exchange.Binance,
-			Pair:      q.Pair,
-			Timestamp: time.Now(),
-			Bids:      message.MakeDepthValues(depth.Bids),
-			Asks:      message.MakeDepthValues(depth.Asks),
-		}, nil
 	}
+
+	return &message.Orders{
+		Origin:    exchange.Binance,
+		Pair:      q.Pair,
+		Timestamp: time.Now(),
+		Bids:      message.MakeDepthValues(depth.Bids),
+		Asks:      message.MakeDepthValues(depth.Asks),
+	}, nil
 }
 
 func (q *queries) QueryTrades(l message.Limit) (*message.Trades, error) {
@@ -142,17 +143,17 @@ func (q *queries) QueryCandlesticks(interval int, count int) (*message.Candlesti
 	var klines []Kline
 	if err := q.query("klines", count, i, &klines); err != nil {
 		return nil, err
-	} else {
-		r := &message.Candlesticks{}
-		r.Pair = q.Pair
-		r.Origin = exchange.Binance
-		r.Klines = make([]message.Kline, len(klines))
-		for i, v := range klines {
-			r.Klines[i] = v.Kline
-			r.Klines[i].Interval = minutes
-		}
-		return r, nil
 	}
+
+	r := &message.Candlesticks{}
+	r.Pair = q.Pair
+	r.Origin = exchange.Binance
+	r.Klines = make([]message.Kline, len(klines))
+	for i, v := range klines {
+		r.Klines[i] = v.Kline
+		r.Klines[i].Interval = minutes
+	}
+	return r, nil
 }
 
 func (q *queries) query(api string, limit int, interval string, result interface{}) error {
@@ -188,14 +189,15 @@ func (q *queries) query(api string, limit int, interval string, result interface
 						return &exchange.UnsupportedPair{exchange.Binance, q.Pair}
 					}
 					return apiErr
-				} else {
-					if resp != nil {
-						err := json.Unmarshal(body, result)
-						if err != nil {
-							return err
-						}
+				}
+
+				if resp != nil {
+					err := json.Unmarshal(body, result)
+					if err != nil {
+						return err
 					}
 				}
+
 				return nil
 			}
 		}

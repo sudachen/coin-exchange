@@ -22,8 +22,8 @@ var Coins = map[exchange.CoinType]bool{
 var Pairs = make(map[string]exchange.CoinPair)
 
 func init() {
-	for c1, _ := range Coins {
-		for c2, _ := range Coins {
+	for c1 := range Coins {
+		for c2 := range Coins {
 			if c1 != c2 {
 				pair := exchange.CoinPair{c1, c2}
 				Pairs[strings.ToUpper(MakeSymbol(pair))] = pair
