@@ -1,1 +1,1 @@
-[![CircleCI](https://circleci.com/gh/sudachen/coin-exchange.svg?style=svg)](https://circleci.com/gh/sudachen/coin-exchange)
+[![CircleCI](https://circleci.com/gh/sudachen/coin-exchange.svg?style=svg)](https://circleci.com/gh/sudachen/coin-exchange) [![Maintainability](https://api.codeclimate.com/v1/badges/4e4ed125807c5f299eaf/maintainability)](https://codeclimate.com/github/sudachen/coin-exchange/maintainability) [![Test Coverage](https://api.codeclimate.com/v1/badges/4e4ed125807c5f299eaf/test_coverage)](https://codeclimate.com/github/sudachen/coin-exchange/test_coverage)
