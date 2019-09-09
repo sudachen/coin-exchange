@@ -1,6 +1,10 @@
 package channel
 
-import "fmt"
+import (
+	"fmt"
+	"strconv"
+	"strings"
+)
 
 type Channel int32
 
@@ -26,4 +30,21 @@ func (c Channel) String() string {
 	default:
 		return fmt.Sprintf("Channel-%d", c)
 	}
+}
+
+func FromString(s string) Channel {
+	switch strings.ToLower(s) {
+	case "no-channel": return NoChannel
+	case "trade": return Trade
+	case "candlestick": return Candlestick
+	case "depth": return Depth
+	default:
+		if strings.Index(strings.ToLower(s),"channel-") == 0 {
+			v, err := strconv.ParseInt(s[8:],10,32)
+			if err == nil {
+				return Channel(v)
+			}
+		}
+	}
+	return NoChannel
 }

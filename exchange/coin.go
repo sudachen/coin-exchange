@@ -75,10 +75,6 @@ func CoinFromString(s string) (CoinType, error) {
 	}
 }
 
-type CoinPair [2]CoinType
-
-var NoPair = CoinPair{NoCoin, NoCoin}
-
 func (c *CoinType) UnmarshalYAML(value *yaml.Node) error {
 	if value.Tag != "!!str" {
 		return fmt.Errorf("can't decode coin")
@@ -92,6 +88,14 @@ func (c *CoinType) UnmarshalYAML(value *yaml.Node) error {
 
 	return nil
 }
+
+func (c CoinType) MarshalYAML() (interface{}, error) {
+	return c.String(), nil
+}
+
+type CoinPair [2]CoinType
+
+var NoPair = CoinPair{NoCoin, NoCoin}
 
 func (c CoinPair) String() string {
 	return fmt.Sprintf("%s/%s", c[0].String(), c[1].String())
@@ -119,6 +123,24 @@ func PairFromString(s string) (CoinPair, error) {
 		}
 	}
 	return p, nil
+}
+
+func (p *CoinPair) UnmarshalYAML(value *yaml.Node) error {
+	if value.Tag != "!!str" {
+		return fmt.Errorf("can't decode coin pair")
+	}
+
+	if v, err := PairFromString(value.Value); err != nil {
+		return err
+	} else {
+		*p = v
+	}
+
+	return nil
+}
+
+func (p CoinPair) MarshalYAML() (interface{}, error) {
+	return p.String(), nil
 }
 
 type UnsupportedPair struct {

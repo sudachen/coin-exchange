@@ -53,3 +53,7 @@ func (e *Exchange) UnmarshalYAML(value *yaml.Node) error {
 
 	return nil
 }
+
+func (e Exchange) MarshalYAML() (interface{}, error) {
+	return e.String(), nil
+}
