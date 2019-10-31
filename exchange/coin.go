@@ -3,6 +3,7 @@ package exchange
 import (
 	"fmt"
 	"gopkg.in/yaml.v3"
+	"sort"
 	"strings"
 )
 
@@ -150,4 +151,18 @@ type UnsupportedPair struct {
 
 func (e *UnsupportedPair) Error() string {
 	return fmt.Sprintf("UnsupportedPair{%v:%v}", e.Exchange.String(), e.CoinPair.String())
+}
+
+func GetUniqueCoins(pairs []CoinPair) []CoinType {
+	cSet := map[CoinType]bool{}
+	for _, k := range pairs {
+		cSet[k[0]] = true
+		cSet[k[1]] = true
+	}
+	coins := make([]CoinType,0,len(cSet))
+	for k := range cSet {
+		coins = append(coins,k)
+	}
+	sort.Slice(coins,func(i,j int)bool{return coins[i]<coins[j]})
+	return coins
 }
